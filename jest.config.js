@@ -1,12 +1,9 @@
 /** @type {import('jest').Config} */
 module.exports = {
-	preset: 'ts-jest',
 	testEnvironment: 'node',
 	roots: ['<rootDir>/tests'],
 	testTimeout: 30000,
-	globals: {
-		'ts-jest': {
-			tsconfig: 'tsconfig.test.json',
-		},
+	transform: {
+		'^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
 	},
 };

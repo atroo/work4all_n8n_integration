@@ -51,9 +51,12 @@ function makeBinaryEntry(fileName: string, mimeType: string): MockBinaryEntry {
 
 /** Minimal invoice details referencing the test supplier */
 function baseDetails() {
+	const today = new Date().toISOString();
 	return {
 		supplierCode: SUPPLIER_CODE,
-		invoiceNumberSupplier: `TEST-${Date.now()}`,
+		invoiceNumberSupplier: `IntegrationTest Invoice ${Date.now()}`,
+		invoiceDate: today,
+		entryDate: today,
 		currencyCode: 1,
 	};
 }

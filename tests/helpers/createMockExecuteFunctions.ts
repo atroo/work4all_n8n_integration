@@ -44,12 +44,23 @@ export function createMockExecuteFunctions(opts: MockOptions): IExecuteFunctions
 			httpRequest: opts.httpRequest
 				? opts.httpRequest
 				: async (requestOpts: Record<string, unknown>): Promise<unknown> => {
-						const response = await fetch(requestOpts['url'] as string, {
+						const url = requestOpts['url'] as string;
+						const response = await fetch(url, {
 							method: requestOpts['method'] as string,
-							headers: requestOpts['headers'] as HeadersInit,
+							headers: requestOpts['headers'] as Record<string, string>,
 							body: requestOpts['body'] ? JSON.stringify(requestOpts['body']) : undefined,
 						});
-						return response.json();
+						const text = await response.text();
+						if (!response.ok) {
+							throw new Error(
+								`HTTP ${response.status} ${response.statusText} for ${url}\n${text.slice(0, 500)}`,
+							);
+						}
+						try {
+							return JSON.parse(text) as unknown;
+						} catch {
+							throw new Error(`Non-JSON response (HTTP ${response.status}) from ${url}:\n${text.slice(0, 500)}`);
+						}
 					},
 		},
 	} as unknown as IExecuteFunctions;
