@@ -1,0 +1,229 @@
+/**
+ * Integration tests for createIncomingInvoice — hits the real work4all API.
+ *
+ * Required env vars (put in .env.test, which is gitignored):
+ *   W4A_BASE_URL            e.g. https://api.work4all.de
+ *   W4A_ACCESS_TOKEN        Bearer token (without the "Bearer " prefix)
+ *   W4A_TEST_SUPPLIER_CODE  Internal supplier code (number) — must exist in your tenant
+ *   W4A_TEST_ACCOUNT_CODE   Sachkonto code for the invoice line item
+ *
+ * All tests are skipped automatically when the env vars are not set.
+ */
+
+import * as dotenv from 'dotenv';
+import * as fs from 'fs';
+import * as path from 'path';
+import JSZip from 'jszip';
+import type { IBinaryData } from 'n8n-workflow';
+
+import { execute } from '../../nodes/work4all/operations/createIncomingInvoice/execute';
+import { createMockExecuteFunctions, MockBinaryEntry } from '../helpers/createMockExecuteFunctions';
+
+dotenv.config({ path: path.resolve(__dirname, '../../.env.test') });
+
+// ── Credentials & config ──────────────────────────────────────────────────────
+
+const BASE_URL = process.env['W4A_BASE_URL'] ?? '';
+const ACCESS_TOKEN = process.env['W4A_ACCESS_TOKEN'] ?? '';
+const SUPPLIER_CODE = parseInt(process.env['W4A_TEST_SUPPLIER_CODE'] ?? '0', 10);
+const ACCOUNT_CODE = parseInt(process.env['W4A_TEST_ACCOUNT_CODE'] ?? '0', 10);
+
+const hasCredentials = Boolean(BASE_URL && ACCESS_TOKEN && SUPPLIER_CODE && ACCOUNT_CODE);
+
+// Use `it` when credentials are present, `it.skip` otherwise — tests will appear
+// as "skipped" in the report rather than failing the suite in CI without credentials.
+const test = hasCredentials ? it : it.skip;
+
+// ── Test fixtures ─────────────────────────────────────────────────────────────
+
+const DATA_DIR = path.resolve(__dirname, '../../data/receipts');
+
+function readFixture(fileName: string): Buffer {
+	return fs.readFileSync(path.join(DATA_DIR, fileName));
+}
+
+function makeBinaryEntry(fileName: string, mimeType: string): MockBinaryEntry {
+	return {
+		data: { fileName, mimeType, fileType: 'binary' } as IBinaryData,
+		buffer: readFixture(fileName),
+	};
+}
+
+/** Minimal invoice details referencing the test supplier */
+function baseDetails() {
+	return {
+		supplierCode: SUPPLIER_CODE,
+		invoiceNumberSupplier: `TEST-${Date.now()}`,
+		currencyCode: 1,
+	};
+}
+
+/** One line item hitting the test account */
+function baseItems() {
+	return JSON.stringify([
+		{
+			account: ACCOUNT_CODE,
+			taxRate: 19,
+			netAmount: 10.0,
+			grossAmount: 11.9,
+			vatAmount: 1.9,
+			note: 'n8n integration test',
+		},
+	]);
+}
+
+/** Base mock options (no attachments) */
+function baseOpts(extraParams: Record<string, unknown> = {}) {
+	return {
+		credentials: { baseUrl: BASE_URL, accessToken: ACCESS_TOKEN },
+		parameters: {
+			'dataFields.details': baseDetails(),
+			inputMode: 'json',
+			invoiceItemsJson: baseItems(),
+			attachmentsUi: {},
+			...extraParams,
+		},
+	};
+}
+
+// ── Helper: assert a successful GraphQL response ──────────────────────────────
+
+interface GqlResponse {
+	data?: { ahf_CreateCompleteIncomingInvoice?: { code: number; rNummer?: string } };
+	errors?: Array<{ message: string }>;
+}
+
+function assertSuccess(result: unknown): void {
+	const res = result as GqlResponse;
+	if (res.errors?.length) {
+		throw new Error(`GraphQL errors: ${res.errors.map((e) => e.message).join(', ')}`);
+	}
+	expect(res.data?.ahf_CreateCompleteIncomingInvoice?.code).toBeGreaterThan(0);
+}
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
+
+describe('createIncomingInvoice (integration)', () => {
+	test('creates invoice without attachments', async () => {
+		const mock = createMockExecuteFunctions(baseOpts());
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+	});
+
+	test('creates invoice with one PDF attachment (normal PDF)', async () => {
+		const mock = createMockExecuteFunctions({
+			...baseOpts({
+				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
+			}),
+			binaryData: {
+				receipt: makeBinaryEntry('Teamviewer - normales PDF.pdf', 'application/pdf'),
+			},
+		});
+
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+	});
+
+	test('creates invoice with one ZUGFeRD PDF attachment', async () => {
+		const mock = createMockExecuteFunctions({
+			...baseOpts({
+				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
+			}),
+			binaryData: {
+				receipt: makeBinaryEntry('Lisa Jäckel - ZUGFeRD.pdf', 'application/pdf'),
+			},
+		});
+
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+	});
+
+	test('creates invoice with one XRechnung XML attachment', async () => {
+		const mock = createMockExecuteFunctions({
+			...baseOpts({
+				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
+			}),
+			binaryData: {
+				receipt: makeBinaryEntry('atroo xrechnung.xml', 'application/xml'),
+			},
+		});
+
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+	});
+
+	test('creates invoice with multiple PDF attachments', async () => {
+		const mock = createMockExecuteFunctions({
+			...baseOpts({
+				attachmentsUi: {
+					files: [
+						{ binaryPropertyName: 'receipt0' },
+						{ binaryPropertyName: 'receipt1' },
+					],
+				},
+			}),
+			binaryData: {
+				receipt0: makeBinaryEntry('Teamviewer - normales PDF.pdf', 'application/pdf'),
+				receipt1: makeBinaryEntry('Teamviewer - normales Addition.pdf', 'application/pdf'),
+			},
+		});
+
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+	});
+
+	test('creates invoice with non-valid ZUGFeRD PDF (API should still accept the file)', async () => {
+		const mock = createMockExecuteFunctions({
+			...baseOpts({
+				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
+			}),
+			binaryData: {
+				receipt: makeBinaryEntry('EMOVA - nicht valides ZUGFeRD.pdf', 'application/pdf'),
+			},
+		});
+
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+	});
+
+	test('creates invoice with ZIP — contents extracted and uploaded individually', async () => {
+		// The node itself does not extract ZIPs (no external deps allowed).
+		// This test simulates what an upstream "Extract Zip" node would do:
+		// it reads the ZIP, extracts each entry, and passes them as separate
+		// binary properties — each appearing as its own attachment.
+		const zipBuffer = readFixture('Invoice.zip');
+		const zip = await JSZip.loadAsync(zipBuffer);
+
+		const binaryData: Record<string, MockBinaryEntry> = {};
+		const attachmentFiles: Array<{ binaryPropertyName: string }> = [];
+
+		let index = 0;
+		for (const [entryName, zipEntry] of Object.entries(zip.files)) {
+			if (zipEntry.dir) continue;
+			const entryBuffer = Buffer.from(await zipEntry.async('arraybuffer'));
+			const propName = `zipFile${index}`;
+			const mimeType = entryName.toLowerCase().endsWith('.pdf')
+				? 'application/pdf'
+				: entryName.toLowerCase().endsWith('.xml')
+					? 'application/xml'
+					: 'application/octet-stream';
+
+			binaryData[propName] = {
+				data: { fileName: entryName, mimeType, fileType: 'binary' } as IBinaryData,
+				buffer: entryBuffer,
+			};
+			attachmentFiles.push({ binaryPropertyName: propName });
+			index++;
+		}
+
+		expect(attachmentFiles.length).toBeGreaterThan(0);
+
+		const mock = createMockExecuteFunctions({
+			...baseOpts({ attachmentsUi: { files: attachmentFiles } }),
+			binaryData,
+		});
+
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+	});
+});
