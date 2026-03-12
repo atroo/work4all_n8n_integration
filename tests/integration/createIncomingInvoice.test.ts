@@ -44,7 +44,7 @@ function readFixture(fileName: string): Buffer {
 
 function makeBinaryEntry(fileName: string, mimeType: string): MockBinaryEntry {
 	return {
-		data: { fileName, mimeType, fileType: 'binary' } as IBinaryData,
+		data: { data: '', fileName, mimeType } as IBinaryData,
 		buffer: readFixture(fileName),
 	};
 }
@@ -209,7 +209,7 @@ describe('createIncomingInvoice (integration)', () => {
 					: 'application/octet-stream';
 
 			binaryData[propName] = {
-				data: { fileName: entryName, mimeType, fileType: 'binary' } as IBinaryData,
+				data: { data: '', fileName: entryName, mimeType } as IBinaryData,
 				buffer: entryBuffer,
 			};
 			attachmentFiles.push({ binaryPropertyName: propName });
