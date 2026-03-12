@@ -202,9 +202,6 @@ async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
                     }
                 `;
 
-				console.log('SENDING DATA:', JSON.stringify({ query: statement, variables: { data: gqlData, receipts: gqlReceipts } }, null, 2));
-
-
                 // 4. Den Request über den n8n-Helper absetzen
                 const responseData = await this.helpers.httpRequest({
                     method: 'POST',
