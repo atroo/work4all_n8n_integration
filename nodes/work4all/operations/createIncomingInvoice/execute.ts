@@ -14,11 +14,74 @@ const GQL_MUTATION = `
 			faelligDatum
 			eingangsDatum
 			buchungsDatum
-			lieferant { name }
-			projekt { name }
+			rBetrag
+			rMwst
+			summe
+			waehrungCode
+			paymentTermDays
+			skontoProzent
+			skontoTg
+			statusCode
+			creationDate
+			sDObjMemberCode
+			projektCode
+			buchungen {
+				code
+				sachkontoCode
+				sachkontoNummer
+				kostenstelleCode
+				kostenstelleNummer
+				kostengruppeCode
+				projektCode
+				steuerschluessel
+				mwst
+				valueNet
+				mwstBetrag
+				anteilDM
+				notiz
+			}
+			lieferant { code nummer name }
+			projekt { code nummer name }
 		}
 	}
 `;
+
+interface UploadResponse {
+	fileStored: boolean;
+	generatedObject: string;
+	errorMessage?: string;
+}
+
+async function uploadFile(
+	baseUrl: string,
+	accessToken: string,
+	buffer: Buffer,
+	fileName: string,
+	mimeType: string,
+): Promise<string> {
+	const form = new FormData();
+	const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+	form.append('myFile', new Blob([arrayBuffer], { type: mimeType }), fileName);
+
+	const response = await fetch(`${baseUrl}/api/file?type=TempDatei`, {
+		method: 'POST',
+		headers: { Authorization: `Bearer ${accessToken}` },
+		body: form,
+	});
+
+	if (!response.ok) {
+		throw new Error(`File upload failed for "${fileName}" (HTTP ${response.status})`);
+	}
+
+	const json = (await response.json()) as UploadResponse;
+	if (!json.fileStored || !json.generatedObject) {
+		throw new Error(
+			`File upload rejected for "${fileName}": ${json.errorMessage ?? JSON.stringify(json)}`,
+		);
+	}
+
+	return json.generatedObject;
+}
 
 export async function execute(this: IExecuteFunctions, itemIndex: number): Promise<object> {
 	const credentials = await this.getCredentials('work4allApi');
@@ -38,7 +101,27 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 		invoiceItems = raw;
 	}
 
-	const receiptsUi = this.getNodeParameter('receiptsUi.add', itemIndex, []) as unknown[];
+	// ── File attachments ──────────────────────────────────────────────────────
+	const attachmentsUi = this.getNodeParameter('attachmentsUi', itemIndex) as {
+		files?: Array<{ binaryPropertyName: string }>;
+	};
+	const filesToUpload = attachmentsUi?.files ?? [];
+
+	const uploadedFiles: Array<{ tempFileId: string }> = [];
+	for (const { binaryPropertyName } of filesToUpload) {
+		const binaryData = this.helpers.assertBinaryData(itemIndex, binaryPropertyName);
+		const buffer = await this.helpers.getBinaryDataBuffer(itemIndex, binaryPropertyName);
+		const tempFileId = await uploadFile(
+			baseUrl,
+			accessToken,
+			buffer,
+			binaryData.fileName ?? 'attachment',
+			binaryData.mimeType,
+		);
+		uploadedFiles.push({ tempFileId });
+	}
+
+	const receipts = uploadedFiles.length > 0 ? { add: uploadedFiles } : undefined;
 
 	return this.helpers.httpRequest({
 		method: 'POST',
@@ -51,7 +134,7 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 			query: GQL_MUTATION,
 			variables: {
 				data: { ...details, invoiceItems },
-				receipts: { add: receiptsUi },
+				...(receipts && { receipts }),
 			},
 		},
 		json: true,

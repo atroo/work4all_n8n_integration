@@ -14,8 +14,17 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 				name: 'details',
 				displayName: 'Details',
 				values: [
-					{ displayName: 'Supplier Code', name: 'supplierCode', type: 'number', default: 0 },
-					{ displayName: 'Project Code', name: 'projectCode', type: 'number', default: 0 },
+					// ── Supplier (server resolves in priority order: Code > CustomerNumber > Email > IBAN) ──
+					{ displayName: 'Supplier Code', name: 'supplierCode', type: 'number', default: 0, description: 'Internal work4all supplier code. Takes priority over all other supplier lookup fields.' },
+					{ displayName: 'Supplier Name', name: 'supplierName', type: 'string', default: '', description: 'Look up supplier by name. Match must be unique.' },
+					{ displayName: 'Customer Number at Supplier', name: 'supplierCustomerNumberAtSupplier', type: 'string', default: '', description: 'Your own customer number at this supplier. Match must be unique.' },
+					{ displayName: 'Supplier Contact Email', name: 'supplierContactMailAddress', type: 'string', default: '', description: 'Email address of the supplier or one of their contacts. Match must be unique.' },
+					{ displayName: 'Supplier IBAN', name: 'supplierIban', type: 'string', default: '', description: 'IBAN of the supplier. Match must be unique.' },
+					// ── Project (server resolves in priority order: Code > Number > Name) ──────────────────
+					{ displayName: 'Project Code', name: 'projectCode', type: 'number', default: 0, description: 'Internal work4all project code. Takes priority over project number and name.' },
+					{ displayName: 'Project Number', name: 'projectNumber', type: 'string', default: '', description: 'Human-readable project number. Match must be unique.' },
+					{ displayName: 'Project Name', name: 'projectName', type: 'string', default: '', description: 'Project name. Match must be unique.' },
+					// ── Invoice header ────────────────────────────────────────────────────────────────────
 					{ displayName: 'Supplier Invoice Number', name: 'invoiceNumberSupplier', type: 'string', default: '' },
 					{ displayName: 'Note', name: 'note', type: 'string', default: '' },
 					{ displayName: 'Invoice Date', name: 'invoiceDate', type: 'dateTime', default: '' },
@@ -90,19 +99,26 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		description: 'Array of invoice items as JSON',
 	},
 	{
-		displayName: 'Receipts',
-		name: 'receiptsUi',
+		displayName: 'Attachments',
+		name: 'attachmentsUi',
 		type: 'fixedCollection',
 		typeOptions: { multipleValues: true },
-		placeholder: 'Add Receipt ID',
+		placeholder: 'Add Attachment',
 		default: {},
 		displayOptions: { show: { operation: ['createIncomingInvoice'] } },
+		description: 'Files to attach to the invoice. Each file must be available as binary data from a previous node (e.g. HTTP Request, Read Binary File).',
 		options: [
 			{
-				name: 'add',
-				displayName: 'Add Receipt',
+				name: 'files',
+				displayName: 'Files',
 				values: [
-					{ displayName: 'Temp File ID', name: 'tempFileId', type: 'string', default: '' },
+					{
+						displayName: 'Binary Property',
+						name: 'binaryPropertyName',
+						type: 'string',
+						default: 'data',
+						description: 'Name of the binary property in the current item that contains the file to upload',
+					},
 				],
 			},
 		],
