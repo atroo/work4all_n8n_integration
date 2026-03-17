@@ -50,11 +50,12 @@ function makeBinaryEntry(fileName: string, mimeType: string): MockBinaryEntry {
 }
 
 /** Minimal invoice details referencing the test supplier */
-function baseDetails() {
+function baseDetails(testName: string) {
 	const today = new Date().toISOString();
 	return {
 		supplierCode: SUPPLIER_CODE,
-		invoiceNumberSupplier: `IntegrationTest Invoice ${Date.now()}`,
+		invoiceNumberSupplier: `IT-${Date.now()}`,
+		note: `[n8n test] ${testName}`,
 		invoiceDate: today,
 		entryDate: today,
 		currencyCode: 1,
@@ -75,14 +76,39 @@ function baseItems() {
 	]);
 }
 
-/** Base mock options (no attachments) */
-function baseOpts(extraParams: Record<string, unknown> = {}) {
+/** Base mock options using JSON input mode (no attachments) */
+function baseOpts(testName: string, extraParams: Record<string, unknown> = {}) {
 	return {
 		credentials: { baseUrl: BASE_URL, accessToken: ACCESS_TOKEN },
 		parameters: {
-			'dataFields.details': baseDetails(),
+			'dataFields.details': baseDetails(testName),
 			inputMode: 'json',
 			invoiceItemsJson: baseItems(),
+			attachmentsUi: {},
+			...extraParams,
+		},
+	};
+}
+
+/** Base mock options using manual mapping input mode */
+function baseOptsManual(testName: string, extraParams: Record<string, unknown> = {}) {
+	return {
+		credentials: { baseUrl: BASE_URL, accessToken: ACCESS_TOKEN },
+		parameters: {
+			'dataFields.details': baseDetails(testName),
+			inputMode: 'manual',
+			invoiceItemsUi: {
+				items: [
+					{
+						account: ACCOUNT_CODE,
+						taxRate: 19,
+						netAmount: 10.0,
+						grossAmount: 11.9,
+						vatAmount: 1.9,
+						note: 'n8n integration test (manual)',
+					},
+				],
+			},
 			attachmentsUi: {},
 			...extraParams,
 		},
@@ -108,14 +134,14 @@ function assertSuccess(result: unknown): void {
 
 describe('createIncomingInvoice (integration)', () => {
 	test('creates invoice without attachments', async () => {
-		const mock = createMockExecuteFunctions(baseOpts());
+		const mock = createMockExecuteFunctions(baseOpts('no attachments'));
 		const result = await execute.call(mock, 0);
 		assertSuccess(result);
 	});
 
 	test('creates invoice with one PDF attachment (normal PDF)', async () => {
 		const mock = createMockExecuteFunctions({
-			...baseOpts({
+			...baseOpts('PDF normal', {
 				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
 			}),
 			binaryData: {
@@ -129,7 +155,7 @@ describe('createIncomingInvoice (integration)', () => {
 
 	test('creates invoice with one ZUGFeRD PDF attachment', async () => {
 		const mock = createMockExecuteFunctions({
-			...baseOpts({
+			...baseOpts('PDF ZUGFeRD', {
 				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
 			}),
 			binaryData: {
@@ -143,7 +169,7 @@ describe('createIncomingInvoice (integration)', () => {
 
 	test('creates invoice with one XRechnung XML attachment', async () => {
 		const mock = createMockExecuteFunctions({
-			...baseOpts({
+			...baseOpts('XML XRechnung', {
 				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
 			}),
 			binaryData: {
@@ -157,7 +183,7 @@ describe('createIncomingInvoice (integration)', () => {
 
 	test('creates invoice with multiple PDF attachments', async () => {
 		const mock = createMockExecuteFunctions({
-			...baseOpts({
+			...baseOpts('multi PDF', {
 				attachmentsUi: {
 					files: [
 						{ binaryPropertyName: 'receipt0' },
@@ -177,11 +203,31 @@ describe('createIncomingInvoice (integration)', () => {
 
 	test('creates invoice with non-valid ZUGFeRD PDF (API should still accept the file)', async () => {
 		const mock = createMockExecuteFunctions({
-			...baseOpts({
+			...baseOpts('PDF invalid ZUGFeRD', {
 				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
 			}),
 			binaryData: {
 				receipt: makeBinaryEntry('EMOVA - nicht valides ZUGFeRD.pdf', 'application/pdf'),
+			},
+		});
+
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+	});
+
+	test('creates invoice with manual mapping (no attachments)', async () => {
+		const mock = createMockExecuteFunctions(baseOptsManual('manual no attach'));
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+	});
+
+	test('creates invoice with manual mapping and one PDF attachment', async () => {
+		const mock = createMockExecuteFunctions({
+			...baseOptsManual('manual PDF', {
+				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
+			}),
+			binaryData: {
+				receipt: makeBinaryEntry('Teamviewer - normales PDF.pdf', 'application/pdf'),
 			},
 		});
 
@@ -222,7 +268,7 @@ describe('createIncomingInvoice (integration)', () => {
 		expect(attachmentFiles.length).toBeGreaterThan(0);
 
 		const mock = createMockExecuteFunctions({
-			...baseOpts({ attachmentsUi: { files: attachmentFiles } }),
+			...baseOpts('ZIP extracted', { attachmentsUi: { files: attachmentFiles } }),
 			binaryData,
 		});
 
