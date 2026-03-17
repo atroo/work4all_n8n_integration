@@ -88,17 +88,28 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 	const baseUrl = credentials.baseUrl as string;
 	const accessToken = credentials.accessToken as string;
 
-	const details = this.getNodeParameter('dataFields.details', itemIndex, {}) as Record<string, unknown>;
+	const dataMode = this.getNodeParameter('dataMode', itemIndex) as string;
 
-	const mode = this.getNodeParameter('inputMode', itemIndex) as string;
+	let details: Record<string, unknown>;
 	let invoiceItems: unknown[];
-	if (mode === 'manual') {
-		const ui = this.getNodeParameter('invoiceItemsUi', itemIndex) as Record<string, unknown>;
-		invoiceItems = (ui?.items as unknown[]) ?? [];
+
+	if (dataMode === 'json') {
+		let raw = this.getNodeParameter('invoiceDataJson', itemIndex) as string | Record<string, unknown>;
+		if (typeof raw === 'string') raw = JSON.parse(raw) as Record<string, unknown>;
+		const { invoiceItems: items, ...rest } = raw;
+		details = rest;
+		invoiceItems = Array.isArray(items) ? items : [];
 	} else {
-		let raw = this.getNodeParameter('invoiceItemsJson', itemIndex) as string | unknown[];
-		if (typeof raw === 'string') raw = JSON.parse(raw) as unknown[];
-		invoiceItems = raw;
+		details = this.getNodeParameter('dataFields.details', itemIndex, {}) as Record<string, unknown>;
+		const inputMode = this.getNodeParameter('inputMode', itemIndex) as string;
+		if (inputMode === 'manual') {
+			const ui = this.getNodeParameter('invoiceItemsUi', itemIndex) as Record<string, unknown>;
+			invoiceItems = (ui?.items as unknown[]) ?? [];
+		} else {
+			let raw = this.getNodeParameter('invoiceItemsJson', itemIndex) as string | unknown[];
+			if (typeof raw === 'string') raw = JSON.parse(raw) as unknown[];
+			invoiceItems = raw;
+		}
 	}
 
 	// ── File attachments ──────────────────────────────────────────────────────

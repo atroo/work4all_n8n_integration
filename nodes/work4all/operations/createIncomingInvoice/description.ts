@@ -3,12 +3,35 @@ import { INodeProperties } from 'n8n-workflow';
 
 export const createIncomingInvoiceDescription: INodeProperties[] = [
 	{
+		displayName: 'Data Mode',
+		name: 'dataMode',
+		type: 'options',
+		noDataExpression: true,
+		displayOptions: { show: { operation: ['createIncomingInvoice'] } },
+		options: [
+			{ name: 'Form Fields', value: 'form', description: 'Fill each field individually' },
+			{ name: 'JSON', value: 'json', description: 'Provide all invoice data as a single JSON object — ideal for LLM output' },
+		],
+		default: 'form',
+	},
+	// ── JSON mode ────────────────────────────────────────────────────────────────
+	{
+		displayName: 'Invoice Data (JSON)',
+		name: 'invoiceDataJson',
+		type: 'json',
+		default: '',
+		displayOptions: { show: { operation: ['createIncomingInvoice'], dataMode: ['json'] } },
+		description: 'Complete invoice data as a JSON object. All header fields and invoiceItems array in one. Field names match the form fields (camelCase).',
+		placeholder: '{\n  "supplierCode": 123,\n  "invoiceNumberSupplier": "INV-001",\n  "invoiceDate": "2026-01-15T00:00:00Z",\n  "invoiceItems": [{ "account": 4500, "netAmount": 100, "grossAmount": 119, "vatAmount": 19, "taxRate": 19 }]\n}',
+	},
+	// ── Form mode ────────────────────────────────────────────────────────────────
+	{
 		displayName: 'Invoice Data',
 		name: 'dataFields',
 		type: 'fixedCollection',
 		default: {},
 		placeholder: 'Add Invoice Data',
-		displayOptions: { show: { operation: ['createIncomingInvoice'] } },
+		displayOptions: { show: { operation: ['createIncomingInvoice'], dataMode: ['form'] } },
 		options: [
 			{
 				name: 'details',
@@ -44,7 +67,7 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		displayName: 'Input Mode',
 		name: 'inputMode',
 		type: 'options',
-		displayOptions: { show: { operation: ['createIncomingInvoice'] } },
+		displayOptions: { show: { operation: ['createIncomingInvoice'], dataMode: ['form'] } },
 		options: [
 			{ name: 'Manual Mapping', value: 'manual' },
 			{ name: 'JSON String', value: 'json' },
@@ -62,6 +85,7 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				operation: ['createIncomingInvoice'],
+				dataMode: ['form'],
 				inputMode: ['manual'],
 			},
 		},
@@ -93,6 +117,7 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				operation: ['createIncomingInvoice'],
+				dataMode: ['form'],
 				inputMode: ['json'],
 			},
 		},

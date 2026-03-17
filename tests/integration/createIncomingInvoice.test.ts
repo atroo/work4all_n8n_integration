@@ -139,6 +139,49 @@ describe('createIncomingInvoice (integration)', () => {
 		assertSuccess(result);
 	});
 
+	test('creates invoice via top-level JSON mode (LLM output path)', async () => {
+		const today = new Date().toISOString();
+		const invoiceData = {
+			supplierCode: SUPPLIER_CODE,
+			invoiceNumberSupplier: `IT-${Date.now()}`,
+			note: '[n8n test] JSON mode',
+			invoiceDate: today,
+			entryDate: today,
+			currencyCode: 1,
+			invoiceItems: [
+				{
+					account: ACCOUNT_CODE,
+					taxRate: 19,
+					netAmount: 10.0,
+					grossAmount: 11.9,
+					vatAmount: 1.9,
+					note: 'n8n integration test (json mode)',
+				},
+			],
+		};
+
+		// Without attachment
+		const mockNoAttach = createMockExecuteFunctions({
+			credentials: { baseUrl: BASE_URL, accessToken: ACCESS_TOKEN },
+			parameters: { dataMode: 'json', invoiceDataJson: JSON.stringify(invoiceData), attachmentsUi: {} },
+		});
+		assertSuccess(await execute.call(mockNoAttach, 0));
+
+		// With attachment
+		const mockWithAttach = createMockExecuteFunctions({
+			credentials: { baseUrl: BASE_URL, accessToken: ACCESS_TOKEN },
+			parameters: {
+				dataMode: 'json',
+				invoiceDataJson: JSON.stringify({ ...invoiceData, invoiceNumberSupplier: `IT-${Date.now()}` }),
+				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
+			},
+			binaryData: {
+				receipt: makeBinaryEntry('Teamviewer - normales PDF.pdf', 'application/pdf'),
+			},
+		});
+		assertSuccess(await execute.call(mockWithAttach, 0));
+	});
+
 	test('creates invoice with one PDF attachment (normal PDF)', async () => {
 		const mock = createMockExecuteFunctions({
 			...baseOpts('PDF normal', {
