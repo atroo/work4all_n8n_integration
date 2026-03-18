@@ -124,13 +124,34 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		description: 'Array of invoice items as JSON',
 	},
 	{
+		displayName: 'Attachments Mode',
+		name: 'attachmentsMode',
+		type: 'options',
+		noDataExpression: true,
+		displayOptions: { show: { operation: ['createIncomingInvoice'] } },
+		options: [
+			{ name: 'Form Fields', value: 'form', description: 'Select binary properties manually' },
+			{ name: 'JSON', value: 'json', description: 'Provide attachment list as a JSON array — ideal for LLM output' },
+		],
+		default: 'form',
+	},
+	{
+		displayName: 'Attachments (JSON)',
+		name: 'attachmentsJson',
+		type: 'json',
+		default: '',
+		displayOptions: { show: { operation: ['createIncomingInvoice'], attachmentsMode: ['json'] } },
+		description: 'Array of attachments as JSON. Each entry must have a binaryPropertyName that matches a binary property on the current item.',
+		placeholder: '[{ "binaryPropertyName": "attachment_0" }, { "binaryPropertyName": "attachment_2" }]',
+	},
+	{
 		displayName: 'Attachments',
 		name: 'attachmentsUi',
 		type: 'fixedCollection',
 		typeOptions: { multipleValues: true },
 		placeholder: 'Add Attachment',
 		default: {},
-		displayOptions: { show: { operation: ['createIncomingInvoice'] } },
+		displayOptions: { show: { operation: ['createIncomingInvoice'], attachmentsMode: ['form'] } },
 		description: 'Files to attach to the invoice. Each file must be available as binary data from a previous node (e.g. HTTP Request, Read Binary File).',
 		options: [
 			{

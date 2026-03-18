@@ -258,6 +258,22 @@ describe('createIncomingInvoice (integration)', () => {
 		assertSuccess(result);
 	});
 
+	test('creates invoice with attachments provided as JSON array (LLM attachment selection path)', async () => {
+		const mock = createMockExecuteFunctions({
+			...baseOpts('JSON attachments', {
+				attachmentsMode: 'json',
+				attachmentsJson: JSON.stringify([{ binaryPropertyName: 'attach_0' }, { binaryPropertyName: 'attach_1' }]),
+			}),
+			binaryData: {
+				attach_0: makeBinaryEntry('Teamviewer - normales PDF.pdf', 'application/pdf'),
+				attach_1: makeBinaryEntry('Teamviewer - normales Addition.pdf', 'application/pdf'),
+			},
+		});
+
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+	});
+
 	test('creates invoice with manual mapping (no attachments)', async () => {
 		const mock = createMockExecuteFunctions(baseOptsManual('manual no attach'));
 		const result = await execute.call(mock, 0);

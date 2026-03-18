@@ -113,10 +113,28 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 	}
 
 	// ── File attachments ──────────────────────────────────────────────────────
-	const attachmentsUi = this.getNodeParameter('attachmentsUi', itemIndex) as {
-		files?: Array<{ binaryPropertyName: string }>;
-	};
-	const filesToUpload = attachmentsUi?.files ?? [];
+	let filesToUpload: Array<{ binaryPropertyName: string }> = [];
+
+	const attachmentsMode = this.getNodeParameter('attachmentsMode', itemIndex, 'form') as string;
+	if (attachmentsMode === 'json') {
+		let raw = this.getNodeParameter('attachmentsJson', itemIndex, '[]') as
+			| string
+			| Array<{ binaryPropertyName: string }>;
+		if (typeof raw === 'string') raw = JSON.parse(raw) as Array<{ binaryPropertyName: string }>;
+		filesToUpload = Array.isArray(raw)
+			? raw.filter(
+					(entry): entry is { binaryPropertyName: string } =>
+						typeof entry === 'object' &&
+						entry !== null &&
+						typeof (entry as { binaryPropertyName?: unknown }).binaryPropertyName === 'string',
+				)
+			: [];
+	} else {
+		const attachmentsUi = this.getNodeParameter('attachmentsUi', itemIndex) as {
+			files?: Array<{ binaryPropertyName: string }>;
+		};
+		filesToUpload = attachmentsUi?.files ?? [];
+	}
 
 	const uploadedFiles: Array<{ tempFileId: string }> = [];
 	for (const { binaryPropertyName } of filesToUpload) {
