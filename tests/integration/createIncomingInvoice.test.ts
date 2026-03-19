@@ -139,6 +139,48 @@ describe('createIncomingInvoice (integration)', () => {
 		assertSuccess(result);
 	});
 
+	// NOTE: supplierName / supplierContactMailAddress / supplierIban lookup fields are not yet
+	// deployed on the test server — supplierCode is added as fallback until then.
+	// Once deployed, remove the supplierCode line.
+	test('creates invoice from LLM output with supplier lookup by name/email/IBAN (no supplierCode)', async () => {
+		const invoiceData = {
+			// supplierCode: SUPPLIER_CODE, // TODO: remove once backend lookup fields are deployed
+			supplierName: 'atroo GmbH',
+			supplierContactMailAddress: 'info@atroo.de',
+			supplierIban: 'DE16100100100937368106',
+			invoiceNumberSupplier: 'atroo/2026/00001',
+			note: 'Vielen Dank für die Zusammenarbeit!',
+			invoiceDate: '2026-01-07T00:00:00Z',
+			receiptDate: '2026-01-07T00:00:00Z',
+			paymentTermDays: 24,
+			currencyCode: 208324612,
+			invoiceItems: [
+				{
+					taxRate: 19,
+					netAmount: 12558.13,
+					grossAmount: 14944.18,
+					vatAmount: 2386.05,
+					note: 'FE-Entwicklung / AI4all',
+				},
+			],
+		};
+
+		const mock = createMockExecuteFunctions({
+			credentials: { baseUrl: BASE_URL, accessToken: ACCESS_TOKEN },
+			parameters: {
+				dataMode: 'json',
+				invoiceDataJson: JSON.stringify(invoiceData),
+				attachmentsMode: 'json',
+				attachmentsJson: JSON.stringify([{ binaryPropertyName: 'invoice' }]),
+			},
+			binaryData: {
+				invoice: makeBinaryEntry('atroo xrechnung.xml', 'application/xml'),
+			},
+		});
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+	});
+
 	test('creates invoice via top-level JSON mode (LLM output path)', async () => {
 		const today = new Date().toISOString();
 		const invoiceData = {
