@@ -13,8 +13,23 @@ export class Work4allApi implements ICredentialType {
 			required: true,
 		},
 		{
-			displayName: 'Bearer Token',
-			name: 'accessToken',
+			displayName: 'Token URL',
+			name: 'tokenUrl',
+			type: 'string',
+			default: '',
+			required: true,
+			description: 'OAuth2 token endpoint, e.g. https://auth.work4all.de/connect/token',
+		},
+		{
+			displayName: 'Client ID',
+			name: 'clientId',
+			type: 'string',
+			default: '',
+			required: true,
+		},
+		{
+			displayName: 'Client Secret',
+			name: 'clientSecret',
 			type: 'string',
 			typeOptions: { password: true },
 			default: '',
@@ -25,14 +40,9 @@ export class Work4allApi implements ICredentialType {
 	test: ICredentialTestRequest = {
 		request: {
 			method: 'POST',
-			url: '={{$credentials.baseUrl}}/graphql',
-			headers: {
-				Authorization: '={{ "Bearer " + $credentials.accessToken }}',
-				'Content-Type': 'application/json',
-			},
-			body: {
-				query: '{ __typename }',
-			},
+			url: '={{$credentials.tokenUrl}}',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: '={{"grant_type=client_credentials&client_id=" + encodeURIComponent($credentials.clientId) + "&client_secret=" + encodeURIComponent($credentials.clientSecret)}}',
 		},
 	};
 }

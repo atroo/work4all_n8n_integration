@@ -2,10 +2,12 @@
  * Integration tests for createIncomingInvoice — hits the real work4all API.
  *
  * Required env vars (put in .env.test, which is gitignored):
- *   W4A_BASE_URL            e.g. https://api.work4all.de
- *   W4A_ACCESS_TOKEN        Bearer token (without the "Bearer " prefix)
- *   W4A_TEST_SUPPLIER_CODE  Internal supplier code (number) — must exist in your tenant
- *   W4A_TEST_ACCOUNT_CODE   Sachkonto code for the invoice line item
+ *   W4A_BASE_URL                 e.g. https://api.work4all.de
+ *   W4A_API_ACCESS_TOKEN_URL     OAuth2 token endpoint URL
+ *   W4A_API_CLIENT_ID            OAuth2 client ID
+ *   W4A_API_CLIENT_SECRET        OAuth2 client secret
+ *   W4A_TEST_SUPPLIER_CODE       Internal supplier code (number) — must exist in your tenant
+ *   W4A_TEST_ACCOUNT_CODE        Sachkonto code for the invoice line item
  *
  * All tests are skipped automatically when the env vars are not set.
  */
@@ -24,11 +26,13 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env.test') });
 // ── Credentials & config ──────────────────────────────────────────────────────
 
 const BASE_URL = process.env['W4A_BASE_URL'] ?? '';
-const ACCESS_TOKEN = process.env['W4A_ACCESS_TOKEN'] ?? '';
+const TOKEN_URL = process.env['W4A_API_ACCESS_TOKEN_URL'] ?? '';
+const CLIENT_ID = process.env['W4A_API_CLIENT_ID'] ?? '';
+const CLIENT_SECRET = process.env['W4A_API_CLIENT_SECRET'] ?? '';
 const SUPPLIER_CODE = parseInt(process.env['W4A_TEST_SUPPLIER_CODE'] ?? '0', 10);
 const ACCOUNT_CODE = parseInt(process.env['W4A_TEST_ACCOUNT_CODE'] ?? '0', 10);
 
-const hasCredentials = Boolean(BASE_URL && ACCESS_TOKEN && SUPPLIER_CODE && ACCOUNT_CODE);
+const hasCredentials = Boolean(BASE_URL && TOKEN_URL && CLIENT_ID && CLIENT_SECRET && SUPPLIER_CODE && ACCOUNT_CODE);
 
 // Use `it` when credentials are present, `it.skip` otherwise — tests will appear
 // as "skipped" in the report rather than failing the suite in CI without credentials.
@@ -58,7 +62,7 @@ function baseDetails(testName: string) {
 		note: `[n8n test] ${testName}`,
 		invoiceDate: today,
 		entryDate: today,
-		currencyCode: 1,
+		currency: 'EUR',
 	};
 }
 
@@ -79,7 +83,7 @@ function baseItems() {
 /** Base mock options using JSON input mode (no attachments) */
 function baseOpts(testName: string, extraParams: Record<string, unknown> = {}) {
 	return {
-		credentials: { baseUrl: BASE_URL, accessToken: ACCESS_TOKEN },
+		credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
 		parameters: {
 			'dataFields.details': baseDetails(testName),
 			inputMode: 'json',
@@ -93,7 +97,7 @@ function baseOpts(testName: string, extraParams: Record<string, unknown> = {}) {
 /** Base mock options using manual mapping input mode */
 function baseOptsManual(testName: string, extraParams: Record<string, unknown> = {}) {
 	return {
-		credentials: { baseUrl: BASE_URL, accessToken: ACCESS_TOKEN },
+		credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
 		parameters: {
 			'dataFields.details': baseDetails(testName),
 			inputMode: 'manual',
@@ -153,7 +157,7 @@ describe('createIncomingInvoice (integration)', () => {
 			invoiceDate: '2026-01-07T00:00:00Z',
 			receiptDate: '2026-01-07T00:00:00Z',
 			paymentTermDays: 24,
-			currencyCode: 208324612,
+			currency: 'EUR',
 			invoiceItems: [
 				{
 					taxRate: 19,
@@ -166,7 +170,7 @@ describe('createIncomingInvoice (integration)', () => {
 		};
 
 		const mock = createMockExecuteFunctions({
-			credentials: { baseUrl: BASE_URL, accessToken: ACCESS_TOKEN },
+			credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
 			parameters: {
 				dataMode: 'json',
 				invoiceDataJson: JSON.stringify(invoiceData),
@@ -189,7 +193,7 @@ describe('createIncomingInvoice (integration)', () => {
 			note: '[n8n test] JSON mode',
 			invoiceDate: today,
 			entryDate: today,
-			currencyCode: 1,
+			currency: 'EUR',
 			invoiceItems: [
 				{
 					account: ACCOUNT_CODE,
@@ -204,14 +208,14 @@ describe('createIncomingInvoice (integration)', () => {
 
 		// Without attachment
 		const mockNoAttach = createMockExecuteFunctions({
-			credentials: { baseUrl: BASE_URL, accessToken: ACCESS_TOKEN },
+			credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
 			parameters: { dataMode: 'json', invoiceDataJson: JSON.stringify(invoiceData), attachmentsUi: {} },
 		});
 		assertSuccess(await execute.call(mockNoAttach, 0));
 
 		// With attachment
 		const mockWithAttach = createMockExecuteFunctions({
-			credentials: { baseUrl: BASE_URL, accessToken: ACCESS_TOKEN },
+			credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
 			parameters: {
 				dataMode: 'json',
 				invoiceDataJson: JSON.stringify({ ...invoiceData, invoiceNumberSupplier: `IT-${Date.now()}` }),

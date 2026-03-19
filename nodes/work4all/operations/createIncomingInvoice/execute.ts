@@ -1,5 +1,7 @@
 import { IExecuteFunctions } from 'n8n-workflow';
 
+import { getClient } from '../../auth';
+
 const GQL_MUTATION = `
 	mutation ahf_CreateCompleteIncomingInvoice(
 		$data: InputCompleteIncomingInvoice!,
@@ -46,6 +48,7 @@ const GQL_MUTATION = `
 	}
 `;
 
+
 interface UploadResponse {
 	fileStored: boolean;
 	generatedObject: string;
@@ -84,9 +87,7 @@ async function uploadFile(
 }
 
 export async function execute(this: IExecuteFunctions, itemIndex: number): Promise<object> {
-	const credentials = await this.getCredentials('work4allApi');
-	const baseUrl = credentials.baseUrl as string;
-	const accessToken = credentials.accessToken as string;
+	const { baseUrl, accessToken } = await getClient(this);
 
 	const dataMode = this.getNodeParameter('dataMode', itemIndex) as string;
 
