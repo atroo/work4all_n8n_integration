@@ -1,3 +1,4 @@
+/* eslint-disable @n8n/community-nodes/no-restricted-imports, @n8n/community-nodes/no-restricted-globals */
 /**
  * Integration tests for createIncomingInvoice — hits the real work4all API.
  *

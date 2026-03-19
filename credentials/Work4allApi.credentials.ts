@@ -2,7 +2,8 @@ import { ICredentialTestRequest, ICredentialType, INodeProperties } from 'n8n-wo
 
 export class Work4allApi implements ICredentialType {
 	name = 'work4allApi';
-	displayName = 'work4all API';
+	displayName = 'Work4all API';
+	icon = { light: 'file:../nodes/work4all/w4a.svg', dark: 'file:../nodes/work4all/w4a.svg' } as ICredentialType['icon'];
 	documentationUrl = 'https://docs.work4all.de';
 	properties: INodeProperties[] = [
 		{

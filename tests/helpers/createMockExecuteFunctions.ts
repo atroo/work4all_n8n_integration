@@ -21,7 +21,7 @@ export interface MockOptions {
  */
 export function createMockExecuteFunctions(opts: MockOptions): IExecuteFunctions {
 	return {
-		getCredentials: async (_name: string) => opts.credentials,
+		getCredentials: async () => opts.credentials,
 
 		getNodeParameter: (name: string, _itemIndex: number, fallback?: unknown) => {
 			const value = opts.parameters[name as string];
