@@ -1,0 +1,543 @@
+{
+  "name": "w4a-invoice-exchange",
+  "nodes": [
+    {
+      "parameters": {
+        "dataMode": "json",
+        "invoiceDataJson": "={{ $json.invoiceData }}",
+        "attachmentsMode": "json",
+        "attachmentsJson": "={{ ($json.relevantAttachmentKeys || []).map(k => ({ binaryPropertyName: k })) }}"
+      },
+      "type": "CUSTOM.work4all",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        0
+      ],
+      "id": "dcd0f562-fdaa-45e2-98f7-58a9f21fc507",
+      "name": "work4all",
+      "credentials": {
+        "work4allApi": {
+          "id": "GNx2r9nB6bBuknX0",
+          "name": "work4all account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7ea39fb4-a88f-4f20-85d2-6daea27f1c16",
+              "leftValue": "={{ Object.keys($binary ?? {}).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -672,
+        144
+      ],
+      "id": "d312f647-2951-4ced-9515-976bad18991e",
+      "name": "check for attachments"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4c92d260-6a68-4199-b314-3ac18af1e252",
+      "name": "Upload a file",
+      "credentials": {
+        "anthropicApi": {
+          "id": "sYtc7j50JUIDoTBU",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const out = [];\nconst items = $input.all();\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const binary = item.binary || {};\n  const json = item.json || {};\n\n  for (const [key, file] of Object.entries(binary)) {\n    const mimeType = file.mimeType || \"\";\n    const fileName = file.fileName || \"\";\n\n    if (\n      mimeType === \"application/xml\" ||\n      mimeType === \"text/xml\" ||\n      fileName.toLowerCase().endsWith(\".xml\")\n    ) {\n      const buffer = await this.helpers.getBinaryDataBuffer(i, key);\n      const xmlText = buffer.toString(\"utf8\");\n\n      out.push({\n        json: {\n          gmailMessageId: json.id,\n          originalSubject: json.subject,\n          attachmentKey: key,\n          fileName,\n          mimeType,\n          contentKind: \"xml_text\",\n          xmlText,\n        },\n      });\n    } else {\n      out.push({\n        json: {\n          gmailMessageId: json.id,\n          originalSubject: json.subject,\n          attachmentKey: key,\n          fileName,\n          mimeType,\n          contentKind: \"upload_file\",\n        },\n        binary: {\n          data: file,\n        },\n      });\n    }\n  }\n}\n\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        80
+      ],
+      "id": "cf5be7c7-25d8-4eaf-a0dd-4dab453d1057",
+      "name": "preprocess_attachments"
+    },
+    {
+      "parameters": {
+        "jsCode": "const uploadedDocs = ($json.uploadedFiles || []).map(file => ({\n  type: \"document\",\n  source: {\n    type: \"file\",\n    file_id: file.fileId,\n  }\n}));\n\nconst xmlTexts = ($json.xmlFiles || []).map(file => ({\n  type: \"text\",\n  text: `Filename: ${file.fileName}\\n\\n${file.xmlText}`\n}));\n\nreturn [{\n  json: {\n    gmailMessageId: $json.gmailMessageId,\n    anthropicContent: [\n      ...uploadedDocs,\n      ...xmlTexts,\n      {\n        type: \"text\",\n        text: `Analyze all attached documents together.\n\nGoal:\nDetermine whether these attachments contain an incoming supplier invoice.\nIf yes, extract the invoice data for work4all.\n\nRules:\n- Return ONLY valid JSON.\n- Use this exact top-level shape:\n  {\n    \"found_invoice\": true,\n    \"reason\": \"short explanation\",\n    \"relevantAttachmentKeys\": [\"attachment_0\"],\n    \"invoiceData\": {\n      \"supplierCode\": null,\n      \"supplierName\": null,\n      \"supplierCustomerNumberAtSupplier\": null,\n      \"supplierContactMailAddress\": null,\n      \"supplierIban\": null,\n      \"projectCode\": null,\n      \"projectNumber\": null,\n      \"projectName\": null,\n      \"invoiceNumberSupplier\": null,\n      \"note\": null,\n      \"invoiceDate\": null,\n      \"entryDate\": null,\n      \"receiptDate\": null,\n      \"paymentTermDays\": null,\n      \"discount1Rate\": null,\n      \"discount1Days\": null,\n      \"discount2Rate\": null,\n      \"discount2Days\": null,\n      \"currencyCode\": null,\n      \"invoiceItems\": []\n    }\n  }\n\nExtraction rules:\n- found_invoice = true only if at least one attachment is clearly an incoming invoice / supplier invoice / receipt for accounts payable.\n- relevantAttachmentKeys must contain the original attachment keys, e.g. \"attachment_0\".\n- invoiceData field names must match exactly.\n- Dates must be ISO-8601 strings.\n- Do not invent values.\n- Prefer supplier matching fields in this order when available:\n  supplierCode > supplierName > supplierCustomerNumberAtSupplier > supplierContactMailAddress > supplierIban\n- Prefer project matching fields in this order when available:\n  projectCode > projectNumber > projectName\n- invoiceItems must NOT contain all raw positions.\n- Instead, group and aggregate positions by VAT rate (Mehrwertsteuersatz).\n- Return one invoiceItems entry per VAT bucket.\n- For each VAT bucket, sum:\n  - netAmount\n  - vatAmount\n  - grossAmount\n- Only set account, costCenter, costGroup, projectCode, taxCode if explicitly present in the source.\n- If no invoice is found:\n  - found_invoice = false\n  - relevantAttachmentKeys = []\n  - invoiceData = { all fields null, invoiceItems: [] }`\n      }\n    ]\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        80
+      ],
+      "id": "fcc1d2c4-a1b8-4960-a9bb-530b026201ab",
+      "name": "Prepare Anthropic Context"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "anthropic-beta",
+              "value": "files-api-2025-04-14"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  model: \"claude-sonnet-4-6\",\n  max_tokens: 10000,\n  messages: [\n    {\n      role: \"user\",\n      content: [\n        ...$json.anthropicContent,\n        {\n          type: \"text\",\n          text: `\nReturn ONLY valid JSON.\nDo not use markdown.\nDo not wrap in triple backticks.\nDo not add explanations before or after the JSON.\n\nUse exactly this shape:\n{\n  \"found_invoice\": true,\n  \"reason\": \"short explanation\",\n  \"relevantAttachmentKeys\": [\"attachment_0\"],\n  \"invoiceData\": {\n    \"supplierCode\": null,\n    \"supplierName\": null,\n    \"supplierCustomerNumberAtSupplier\": null,\n    \"supplierContactMailAddress\": null,\n    \"supplierIban\": null,\n    \"projectCode\": null,\n    \"projectNumber\": null,\n    \"projectName\": null,\n    \"invoiceNumberSupplier\": null,\n    \"note\": null,\n    \"invoiceDate\": null,\n    \"entryDate\": null,\n    \"receiptDate\": null,\n    \"paymentTermDays\": null,\n    \"discount1Rate\": null,\n    \"discount1Days\": null,\n    \"discount2Rate\": null,\n    \"discount2Days\": null,\n    \"currencyCode\": null,\n    \"invoiceItems\": [\n      {\n        \"account\": null,\n        \"costCenter\": null,\n        \"costGroup\": null,\n        \"projectCode\": null,\n        \"taxCode\": null,\n        \"taxRate\": null,\n        \"netAmount\": null,\n        \"grossAmount\": null,\n        \"vatAmount\": null,\n        \"note\": null\n      }\n    ]\n  }\n}\n\nRules:\n- found_invoice = true only if at least one attachment is clearly an incoming supplier invoice / Eingangsrechnung / XRechnung / receipt relevant for accounting.\n- relevantAttachmentKeys must contain the original attachment keys like \"attachment_0\".\n- invoiceData field names must match exactly.\n- Dates must be ISO-8601 strings if known, otherwise null.\n- Do not invent values.\n- Aggregate invoiceItems by VAT rate (Mehrwertsteuersatz), not by raw line item.\n- Return one invoiceItems entry per VAT bucket.\n- Sum netAmount, vatAmount and grossAmount per VAT bucket.\n- Only fill account, costCenter, costGroup, projectCode, taxCode if explicitly present in the documents.\n- If no invoice is found, return:\n  {\n    \"found_invoice\": false,\n    \"reason\": \"...\",\n    \"relevantAttachmentKeys\": [],\n    \"invoiceData\": {\n      \"supplierCode\": null,\n      \"supplierName\": null,\n      \"supplierCustomerNumberAtSupplier\": null,\n      \"supplierContactMailAddress\": null,\n      \"supplierIban\": null,\n      \"projectCode\": null,\n      \"projectNumber\": null,\n      \"projectName\": null,\n      \"invoiceNumberSupplier\": null,\n      \"note\": null,\n      \"invoiceDate\": null,\n      \"entryDate\": null,\n      \"receiptDate\": null,\n      \"paymentTermDays\": null,\n      \"discount1Rate\": null,\n      \"discount1Days\": null,\n      \"discount2Rate\": null,\n      \"discount2Days\": null,\n      \"currencyCode\": null,\n      \"invoiceItems\": []\n    }\n  }\n`\n        }\n      ]\n    }\n  ]\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        80
+      ],
+      "id": "77d9dace-4aeb-4d7f-bc17-67d2be63ab54",
+      "name": "LLM Filter Relevant Attachments",
+      "credentials": {
+        "anthropicApi": {
+          "id": "sYtc7j50JUIDoTBU",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a5d662cb-f633-4648-bc88-bcc9362b9630",
+              "leftValue": "={{$json.contentKind === \"upload_file\"}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        80
+      ],
+      "id": "6aa328ce-0f75-4ba5-a89d-43f07dc37ccd",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => ({\n  json: {\n    gmailMessageId: item.json.gmailMessageId,\n    originalSubject: item.json.originalSubject,\n    attachmentKey: item.json.attachmentKey,\n    fileName: item.json.fileName,\n    mimeType: item.json.mimeType,\n    contentKind: \"uploaded_file\",\n    uploadedFileId: item.json.id\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "0339426a-6219-4689-bc65-7a6c744e0c86",
+      "name": "add uploadedFileId"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        80
+      ],
+      "id": "dd757b99-6605-49e3-8cb2-853a4b142c6e",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn [{\n  json: {\n    gmailMessageId: items[0].json.gmailMessageId,\n    originalSubject: items[0].json.originalSubject,\n    uploadedFiles: items\n      .filter(item => item.json.contentKind === \"uploaded_file\")\n      .map(item => ({\n        fileId: item.json.uploadedFileId,\n        fileName: item.json.fileName,\n        mimeType: item.json.mimeType,\n      })),\n    xmlFiles: items\n      .filter(item => item.json.contentKind === \"xml_text\")\n      .map(item => ({\n        fileName: item.json.fileName,\n        mimeType: item.json.mimeType,\n        xmlText: item.json.xmlText,\n      })),\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        80
+      ],
+      "id": "518a8d8f-e01d-4774-bdcd-2682e59766b1",
+      "name": "Aggregate multiple Attachments back to one Email"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6573bc49-61be-476e-95d7-3f9b4e26b1c9",
+              "leftValue": "={{ $json.found_invoice }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        80
+      ],
+      "id": "796ed4c7-1799-49c4-9991-5b2788eddb09",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "function removeNullish(value) {\n  if (Array.isArray(value)) {\n    return value.map(removeNullish);\n  }\n\n  if (value && typeof value === \"object\") {\n    return Object.fromEntries(\n      Object.entries(value)\n        .filter(([, v]) => v !== undefined && v !== null && v !== \"\")\n        .map(([k, v]) => [k, removeNullish(v)])\n    );\n  }\n\n  return value;\n}\n\nlet raw = $json.content?.[0]?.text ?? \"{}\";\n\n// remove accidental code fences if Claude still adds them\nraw = raw\n  .replace(/^```json\\s*/i, \"\")\n  .replace(/^```\\s*/i, \"\")\n  .replace(/\\s*```$/, \"\")\n  .trim();\n\nconst parsed = JSON.parse(raw);\n\nreturn [{\n  json: {\n    found_invoice: parsed.found_invoice === true,\n    reason: parsed.reason ?? \"\",\n    relevantAttachmentKeys: parsed.relevantAttachmentKeys ?? [],\n    invoiceData: removeNullish(parsed.invoiceData ?? {}),\n  },\n  binary: $input.item.binary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        80
+      ],
+      "id": "cf97bd0f-ed92-4c3d-99c7-e6d1d052d4ed",
+      "name": "parse json data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const relevantKeys = $json.relevantAttachmentKeys || [];\nconst sourceBinary = $('Microsoft Outlook Trigger').item.binary || {};\n\nconst keptBinary = Object.fromEntries(\n  relevantKeys\n    .filter((key) => sourceBinary[key])\n    .map((key) => [key, sourceBinary[key]])\n);\n\nconst invoiceData = { ...($json.invoiceData || {}) };\ninvoiceData.currencyCode = 208324612;\n\nfor (const key of [\"invoiceDate\", \"entryDate\", \"receiptDate\"]) {\n  if (\n    typeof invoiceData[key] === \"string\" &&\n    /^\\d{4}-\\d{2}-\\d{2}$/.test(invoiceData[key])\n  ) {\n    invoiceData[key] = `${invoiceData[key]}T00:00:00Z`;\n  }\n}\n\nreturn [{\n  json: {\n    ...$json,\n    invoiceData,\n    relevantAttachmentKeys: relevantKeys,\n  },\n  binary: keptBinary,\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        0
+      ],
+      "id": "bd2ea670-dca8-4707-b217-891d42abe64e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "custom": "not categories/any(c:c eq 'AI/Processed')"
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlookTrigger",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        144
+      ],
+      "id": "fd8d850e-bf7c-4ddf-9154-38db0c035c7f",
+      "name": "Microsoft Outlook Trigger",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "DBrnRozjem4ziL1I",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://graph.microsoft.com/v1.0/me/messages/{{$json.id}}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOutlookOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"categories\": [\"AI/Processed\"]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2256,
+        272
+      ],
+      "id": "3bd92eb6-ccfa-480f-83a3-70c0737162bd",
+      "name": "HTTP Request",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "DBrnRozjem4ziL1I",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "check for attachments": {
+      "main": [
+        [
+          {
+            "node": "preprocess_attachments",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file": {
+      "main": [
+        [
+          {
+            "node": "add uploadedFileId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "preprocess_attachments": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Anthropic Context": {
+      "main": [
+        [
+          {
+            "node": "LLM Filter Relevant Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "add uploadedFileId": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate multiple Attachments back to one Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate multiple Attachments back to one Email": {
+      "main": [
+        [
+          {
+            "node": "Prepare Anthropic Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Filter Relevant Attachments": {
+      "main": [
+        [
+          {
+            "node": "parse json data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse json data": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "work4all": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "work4all",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft Outlook Trigger": {
+      "main": [
+        [
+          {
+            "node": "check for attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "59d1b620-3c4d-4018-9d71-c1eccbca38a1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8f9ec9901e41a08bb2ba8c686bff4a1d25646ff7f206d842b1aa2b96fc47b5f3"
+  },
+  "id": "DovFb3SqbHdOlnZe",
+  "tags": [
+    {
+      "updatedAt": "2026-03-16T07:09:47.577Z",
+      "createdAt": "2026-03-16T07:09:47.577Z",
+      "id": "i74RPAhdxvcl6n37",
+      "name": "w4a invoice"
+    }
+  ]
+}
