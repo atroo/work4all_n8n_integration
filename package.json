@@ -1,7 +1,7 @@
 {
 	"name": "n8n-nodes-work4all",
 	"version": "0.1.0",
-	"description": "first w4a n8n node",
+	"description": "work4all integration for n8n — create incoming invoices and more",
 	"license": "MIT",
 	"homepage": "https://work4all.de",
 	"keywords": [
@@ -28,7 +28,10 @@
 		"test:coverage": "jest --coverage"
 	},
 	"files": [
-		"dist"
+		"dist",
+		"examples",
+		"README.md",
+		"LICENSE.md"
 	],
 	"n8n": {
 		"n8nNodesApiVersion": 1,
