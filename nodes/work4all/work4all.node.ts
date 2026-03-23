@@ -1,8 +1,9 @@
 import { IDataObject, IExecuteFunctions, INodeExecutionData, INodeType, INodeTypeDescription } from 'n8n-workflow';
 
-import { createIncomingInvoice, customer } from './operations';
+import { createIncomingInvoice, customer, project } from './operations';
 
 const customerOps = ['createCustomer', 'getCustomer', 'getAllCustomers', 'updateCustomer'];
+const projectOps = ['getProject', 'getAllProjects'];
 
 export class Work4all implements INodeType {
 	description: INodeTypeDescription = {
@@ -30,11 +31,14 @@ export class Work4all implements INodeType {
 					{ name: 'Get Customer', value: 'getCustomer' },
 					{ name: 'Get All Customers', value: 'getAllCustomers' },
 					{ name: 'Update Customer', value: 'updateCustomer' },
+					{ name: 'Get Project', value: 'getProject' },
+					{ name: 'Get All Projects', value: 'getAllProjects' },
 				],
 				default: 'createIncomingInvoice',
 			},
 			...createIncomingInvoice.description,
 			...customer.description,
+			...project.description,
 		],
 	};
 
@@ -51,6 +55,9 @@ export class Work4all implements INodeType {
 					returnData.push({ json: result as IDataObject });
 				} else if (customerOps.includes(operation)) {
 					const result = await customer.execute.call(this, i);
+					returnData.push({ json: result as IDataObject });
+				} else if (projectOps.includes(operation)) {
+					const result = await project.execute.call(this, i);
 					returnData.push({ json: result as IDataObject });
 				}
 			} catch (error) {
