@@ -44,7 +44,7 @@
 		]
 	},
 	"devDependencies": {
-		"@n8n/node-cli": "*",
+		"@n8n/node-cli": "^0.24.0",
 		"@types/jest": "^29",
 		"@types/node": "^25.4.0",
 		"dotenv": "^16",
