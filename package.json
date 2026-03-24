@@ -13,7 +13,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/TorstenSchmielau/w4a_n8n.git"
+		"url": "https://github.com/atroo/work4all_n8n_integration"
 	},
 	"scripts": {
 		"build": "n8n-node build",
