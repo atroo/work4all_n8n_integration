@@ -150,10 +150,10 @@ describe('createIncomingInvoice (integration)', () => {
 	test('creates invoice from LLM output with supplier lookup by name/email/IBAN (no supplierCode)', async () => {
 		const invoiceData = {
 			// supplierCode: SUPPLIER_CODE, // TODO: remove once backend lookup fields are deployed
-			supplierName: 'atroo GmbH',
-			supplierContactMailAddress: 'info@atroo.de',
-			supplierIban: 'DE16100100100937368106',
-			invoiceNumberSupplier: 'atroo/2026/00001',
+			supplierName: 'Acme Software GmbH',
+			supplierContactMailAddress: 'billing@acme-software.example',
+			supplierIban: 'DE89370400440532013000',
+			invoiceNumberSupplier: 'ACME/2026/00001',
 			note: 'Vielen Dank für die Zusammenarbeit!',
 			invoiceDate: '2026-01-07T00:00:00Z',
 			receiptDate: '2026-01-07T00:00:00Z',
@@ -165,7 +165,7 @@ describe('createIncomingInvoice (integration)', () => {
 					netAmount: 12558.13,
 					grossAmount: 14944.18,
 					vatAmount: 2386.05,
-					note: 'FE-Entwicklung / AI4all',
+					note: 'Software development services Q1/2026',
 				},
 			],
 		};
@@ -179,7 +179,7 @@ describe('createIncomingInvoice (integration)', () => {
 				attachmentsJson: JSON.stringify([{ binaryPropertyName: 'invoice' }]),
 			},
 			binaryData: {
-				invoice: makeBinaryEntry('atroo xrechnung.xml', 'application/xml'),
+				invoice: makeBinaryEntry('sample-xrechnung.xml', 'application/xml'),
 			},
 		});
 		const result = await execute.call(mock, 0);
@@ -223,7 +223,7 @@ describe('createIncomingInvoice (integration)', () => {
 				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
 			},
 			binaryData: {
-				receipt: makeBinaryEntry('Teamviewer - normales PDF.pdf', 'application/pdf'),
+				receipt: makeBinaryEntry('sample-invoice.pdf', 'application/pdf'),
 			},
 		});
 		assertSuccess(await execute.call(mockWithAttach, 0));
@@ -235,7 +235,7 @@ describe('createIncomingInvoice (integration)', () => {
 				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
 			}),
 			binaryData: {
-				receipt: makeBinaryEntry('Teamviewer - normales PDF.pdf', 'application/pdf'),
+				receipt: makeBinaryEntry('sample-invoice.pdf', 'application/pdf'),
 			},
 		});
 
@@ -249,7 +249,7 @@ describe('createIncomingInvoice (integration)', () => {
 				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
 			}),
 			binaryData: {
-				receipt: makeBinaryEntry('Lisa Jäckel - ZUGFeRD.pdf', 'application/pdf'),
+				receipt: makeBinaryEntry('sample-zugferd.pdf', 'application/pdf'),
 			},
 		});
 
@@ -263,7 +263,7 @@ describe('createIncomingInvoice (integration)', () => {
 				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
 			}),
 			binaryData: {
-				receipt: makeBinaryEntry('atroo xrechnung.xml', 'application/xml'),
+				receipt: makeBinaryEntry('sample-xrechnung.xml', 'application/xml'),
 			},
 		});
 
@@ -282,8 +282,8 @@ describe('createIncomingInvoice (integration)', () => {
 				},
 			}),
 			binaryData: {
-				receipt0: makeBinaryEntry('Teamviewer - normales PDF.pdf', 'application/pdf'),
-				receipt1: makeBinaryEntry('Teamviewer - normales Addition.pdf', 'application/pdf'),
+				receipt0: makeBinaryEntry('sample-invoice.pdf', 'application/pdf'),
+				receipt1: makeBinaryEntry('sample-invoice-2.pdf', 'application/pdf'),
 			},
 		});
 
@@ -297,7 +297,7 @@ describe('createIncomingInvoice (integration)', () => {
 				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
 			}),
 			binaryData: {
-				receipt: makeBinaryEntry('EMOVA - nicht valides ZUGFeRD.pdf', 'application/pdf'),
+				receipt: makeBinaryEntry('sample-invalid-zugferd.pdf', 'application/pdf'),
 			},
 		});
 
@@ -312,8 +312,8 @@ describe('createIncomingInvoice (integration)', () => {
 				attachmentsJson: JSON.stringify([{ binaryPropertyName: 'attach_0' }, { binaryPropertyName: 'attach_1' }]),
 			}),
 			binaryData: {
-				attach_0: makeBinaryEntry('Teamviewer - normales PDF.pdf', 'application/pdf'),
-				attach_1: makeBinaryEntry('Teamviewer - normales Addition.pdf', 'application/pdf'),
+				attach_0: makeBinaryEntry('sample-invoice.pdf', 'application/pdf'),
+				attach_1: makeBinaryEntry('sample-invoice-2.pdf', 'application/pdf'),
 			},
 		});
 
@@ -333,7 +333,7 @@ describe('createIncomingInvoice (integration)', () => {
 				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
 			}),
 			binaryData: {
-				receipt: makeBinaryEntry('Teamviewer - normales PDF.pdf', 'application/pdf'),
+				receipt: makeBinaryEntry('sample-invoice.pdf', 'application/pdf'),
 			},
 		});
 
