@@ -150,10 +150,10 @@ describe('createIncomingInvoice (integration)', () => {
 	test('creates invoice from LLM output with supplier lookup by name/email/IBAN (no supplierCode)', async () => {
 		const invoiceData = {
 			// supplierCode: SUPPLIER_CODE, // TODO: remove once backend lookup fields are deployed
-			supplierName: 'Acme Software GmbH',
-			supplierContactMailAddress: 'billing@acme-software.example',
+			supplierName: 'Test Supplier GmbH',
+			supplierContactMailAddress: 'billing@test-supplier.example',
 			supplierIban: 'DE89370400440532013000',
-			invoiceNumberSupplier: 'ACME/2026/00001',
+			invoiceNumberSupplier: 'TEST/2026/00001',
 			note: 'Vielen Dank für die Zusammenarbeit!',
 			invoiceDate: '2026-01-07T00:00:00Z',
 			receiptDate: '2026-01-07T00:00:00Z',
@@ -165,7 +165,7 @@ describe('createIncomingInvoice (integration)', () => {
 					netAmount: 12558.13,
 					grossAmount: 14944.18,
 					vatAmount: 2386.05,
-					note: 'Software development services Q1/2026',
+					note: 'Test services Q1/2026',
 				},
 			],
 		};
@@ -380,5 +380,48 @@ describe('createIncomingInvoice (integration)', () => {
 
 		const result = await execute.call(mock, 0);
 		assertSuccess(result);
+	});
+
+	// ── Output mode tests ─────────────────────────────────────────────────────
+
+	test('createIncomingInvoice — output: simplified (default) trims to core fields', async () => {
+		const mock = createMockExecuteFunctions(baseOpts('output simplified'));
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+		const invoice = (result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } })
+			.data?.ahf_CreateCompleteIncomingInvoice;
+		expect(invoice).toBeDefined();
+		expect(invoice).toHaveProperty('code');
+		expect(invoice).toHaveProperty('rNummer');
+		// fields outside the simplified set are absent
+		expect(invoice).not.toHaveProperty('buchungen');
+		expect(invoice).not.toHaveProperty('notiz');
+	});
+
+	test('createIncomingInvoice — output: raw returns full response', async () => {
+		const mock = createMockExecuteFunctions(baseOpts('output raw', { invoiceOutput: 'raw' }));
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+		const invoice = (result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } })
+			.data?.ahf_CreateCompleteIncomingInvoice;
+		expect(invoice).toBeDefined();
+		// raw includes fields outside the simplified set
+		expect(invoice).toHaveProperty('buchungen');
+		expect(invoice).toHaveProperty('notiz');
+	});
+
+	test('createIncomingInvoice — output: selectedFields returns only the requested fields', async () => {
+		const mock = createMockExecuteFunctions(
+			baseOpts('output selectedFields', {
+				invoiceOutput: 'selectedFields',
+				invoiceOutputFields: '["code","rNummer"]',
+			}),
+		);
+		const result = await execute.call(mock, 0);
+		assertSuccess(result);
+		const invoice = (result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } })
+			.data?.ahf_CreateCompleteIncomingInvoice;
+		expect(invoice).toBeDefined();
+		expect(Object.keys(invoice ?? {})).toEqual(['code', 'rNummer']);
 	});
 });

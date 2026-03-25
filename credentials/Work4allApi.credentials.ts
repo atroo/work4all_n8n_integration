@@ -25,6 +25,7 @@ export class Work4allApi implements ICredentialType {
 			displayName: 'Client ID',
 			name: 'clientId',
 			type: 'string',
+			typeOptions: { password: true },
 			default: '',
 			required: true,
 		},

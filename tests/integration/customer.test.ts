@@ -62,7 +62,7 @@ describe('customer (integration)', () => {
 	let createdCustomerCode = 0;
 
 	test('gets all customers (first page, 10 results)', async () => {
-		const result = await execute.call(ctx('getAllCustomers', { querySize: 10, queryPage: 1 }), 0);
+		const result = await execute.call(ctx('getManyCustomers', { querySize: 10, queryPage: 1 }), 0);
 		assertSuccess(result);
 		const res = result as GqlResponse;
 		expect(res.data?.getKunden?.data).toBeInstanceOf(Array);
@@ -71,7 +71,7 @@ describe('customer (integration)', () => {
 
 	test('gets all customers — page 2', async () => {
 		const result = await execute.call(
-			ctx('getAllCustomers', { querySize: 5, queryPage: 2 }),
+			ctx('getManyCustomers', { querySize: 5, queryPage: 2 }),
 			0,
 		);
 		assertSuccess(result);
@@ -121,5 +121,87 @@ describe('customer (integration)', () => {
 		assertSuccess(result);
 		const res = result as GqlResponse;
 		expect(res.data?.upsertKunde?.code).toBeGreaterThan(0);
+	});
+
+	// ── Output mode tests ─────────────────────────────────────────────────────
+
+	test('getManyCustomers — output: simplified trims to core fields', async () => {
+		const result = await execute.call(
+			ctx('getManyCustomers', { querySize: 1, queryPage: 1, output: 'simplified' }),
+			0,
+		);
+		assertSuccess(result);
+		const items = (result as GqlResponse).data?.getKunden?.data ?? [];
+		expect(items.length).toBeGreaterThan(0);
+		const item = items[0] as Record<string, unknown>;
+		// simplified fields are present
+		expect(item).toHaveProperty('name');
+		expect(item).toHaveProperty('code');
+		// fields outside the simplified set are absent
+		expect(item).not.toHaveProperty('telefon2');
+		expect(item).not.toHaveProperty('ansprechpartner');
+	});
+
+	test('getManyCustomers — output: raw returns full response', async () => {
+		const result = await execute.call(
+			ctx('getManyCustomers', { querySize: 1, queryPage: 1, output: 'raw' }),
+			0,
+		);
+		assertSuccess(result);
+		const items = (result as GqlResponse).data?.getKunden?.data ?? [];
+		expect(items.length).toBeGreaterThan(0);
+		const item = items[0] as Record<string, unknown>;
+		// raw includes fields outside the simplified set
+		expect(item).toHaveProperty('telefon2');
+		expect(item).toHaveProperty('ansprechpartner');
+	});
+
+	test('getManyCustomers — output: selectedFields returns only the requested fields', async () => {
+		const result = await execute.call(
+			ctx('getManyCustomers', {
+				querySize: 1,
+				queryPage: 1,
+				output: 'selectedFields',
+				outputFields: '["code","name"]',
+			}),
+			0,
+		);
+		assertSuccess(result);
+		const items = (result as GqlResponse).data?.getKunden?.data ?? [];
+		expect(items.length).toBeGreaterThan(0);
+		const item = items[0] as Record<string, unknown>;
+		expect(Object.keys(item)).toEqual(['code', 'name']);
+	});
+
+	test('getCustomer — output: simplified trims to core fields (uses customer created above)', async () => {
+		if (!createdCustomerCode) return;
+		const result = await execute.call(
+			ctx('getCustomer', { customerCode: createdCustomerCode, output: 'simplified' }),
+			0,
+		);
+		assertSuccess(result);
+		const items = (result as GqlResponse).data?.getKunden?.data ?? [];
+		expect(items.length).toBe(1);
+		const item = items[0] as Record<string, unknown>;
+		expect(item).toHaveProperty('name');
+		expect(item).not.toHaveProperty('telefon2');
+		expect(item).not.toHaveProperty('ansprechpartner');
+	});
+
+	test('getCustomer — output: selectedFields (uses customer created above)', async () => {
+		if (!createdCustomerCode) return;
+		const result = await execute.call(
+			ctx('getCustomer', {
+				customerCode: createdCustomerCode,
+				output: 'selectedFields',
+				outputFields: '["code","name","eMail"]',
+			}),
+			0,
+		);
+		assertSuccess(result);
+		const items = (result as GqlResponse).data?.getKunden?.data ?? [];
+		expect(items.length).toBe(1);
+		const item = items[0] as Record<string, unknown>;
+		expect(Object.keys(item)).toEqual(['code', 'name', 'eMail']);
 	});
 });

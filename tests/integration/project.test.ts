@@ -63,7 +63,7 @@ function assertSuccess(result: unknown) {
 
 describe('project (integration)', () => {
 	test('gets all projects (first page, 10 results)', async () => {
-		const result = await execute.call(ctx('getAllProjects', { projectQuerySize: 10, projectQueryPage: 1 }), 0);
+		const result = await execute.call(ctx('getManyProjects', { projectQuerySize: 10, projectQueryPage: 1 }), 0);
 		assertSuccess(result);
 		const res = result as GqlResponse;
 		expect(res.data?.getProjekte?.data).toBeInstanceOf(Array);
@@ -71,7 +71,7 @@ describe('project (integration)', () => {
 	});
 
 	test('gets all projects — page 2', async () => {
-		const result = await execute.call(ctx('getAllProjects', { projectQuerySize: 5, projectQueryPage: 2 }), 0);
+		const result = await execute.call(ctx('getManyProjects', { projectQuerySize: 5, projectQueryPage: 2 }), 0);
 		assertSuccess(result);
 		const res = result as GqlResponse;
 		expect(res.data?.getProjekte?.data).toBeInstanceOf(Array);
@@ -84,5 +84,84 @@ describe('project (integration)', () => {
 		const data = res.data?.getProjekte?.data ?? [];
 		expect(data.length).toBe(1);
 		expect(data[0]?.id).toBe(PROJECT_CODE);
+	});
+
+	// ── Output mode tests ─────────────────────────────────────────────────────
+
+	test('getManyProjects — output: simplified trims to core fields', async () => {
+		const result = await execute.call(
+			ctx('getManyProjects', { projectQuerySize: 1, projectQueryPage: 1, projectOutput: 'simplified' }),
+			0,
+		);
+		assertSuccess(result);
+		const items = (result as GqlResponse).data?.getProjekte?.data ?? [];
+		expect(items.length).toBeGreaterThan(0);
+		const item = items[0] as unknown as Record<string, unknown>;
+		// simplified fields are present
+		expect(item).toHaveProperty('name');
+		expect(item).toHaveProperty('customerId');
+		// fields outside the simplified set are absent
+		expect(item).not.toHaveProperty('projectProcessList');
+		expect(item).not.toHaveProperty('startDateOuter');
+	});
+
+	test('getManyProjects — output: raw returns full response', async () => {
+		const result = await execute.call(
+			ctx('getManyProjects', { projectQuerySize: 1, projectQueryPage: 1, projectOutput: 'raw' }),
+			0,
+		);
+		assertSuccess(result);
+		const items = (result as GqlResponse).data?.getProjekte?.data ?? [];
+		expect(items.length).toBeGreaterThan(0);
+		const item = items[0] as unknown as Record<string, unknown>;
+		// raw includes fields outside the simplified set
+		expect(item).toHaveProperty('projectProcessList');
+		expect(item).toHaveProperty('startDateOuter');
+	});
+
+	test('getManyProjects — output: selectedFields returns only the requested fields', async () => {
+		const result = await execute.call(
+			ctx('getManyProjects', {
+				projectQuerySize: 1,
+				projectQueryPage: 1,
+				projectOutput: 'selectedFields',
+				projectOutputFields: '["name","number"]',
+			}),
+			0,
+		);
+		assertSuccess(result);
+		const items = (result as GqlResponse).data?.getProjekte?.data ?? [];
+		expect(items.length).toBeGreaterThan(0);
+		const item = items[0] as unknown as Record<string, unknown>;
+		expect(Object.keys(item)).toEqual(['name', 'number']);
+	});
+
+	testWithProject('getProject — output: simplified trims to core fields', async () => {
+		const result = await execute.call(
+			ctx('getProject', { projectCode: PROJECT_CODE, projectOutput: 'simplified' }),
+			0,
+		);
+		assertSuccess(result);
+		const items = (result as GqlResponse).data?.getProjekte?.data ?? [];
+		expect(items.length).toBe(1);
+		const item = items[0] as unknown as Record<string, unknown>;
+		expect(item).toHaveProperty('name');
+		expect(item).not.toHaveProperty('projectProcessList');
+	});
+
+	testWithProject('getProject — output: selectedFields', async () => {
+		const result = await execute.call(
+			ctx('getProject', {
+				projectCode: PROJECT_CODE,
+				projectOutput: 'selectedFields',
+				projectOutputFields: '["name","customerId"]',
+			}),
+			0,
+		);
+		assertSuccess(result);
+		const items = (result as GqlResponse).data?.getProjekte?.data ?? [];
+		expect(items.length).toBe(1);
+		const item = items[0] as unknown as Record<string, unknown>;
+		expect(Object.keys(item)).toEqual(['name', 'customerId']);
 	});
 });

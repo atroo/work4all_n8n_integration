@@ -2,12 +2,12 @@ import { IDataObject, IExecuteFunctions, INodeExecutionData, INodeType, INodeTyp
 
 import { createIncomingInvoice, customer, project } from './operations';
 
-const customerOps = ['createCustomer', 'getCustomer', 'getAllCustomers', 'updateCustomer'];
-const projectOps = ['getProject', 'getAllProjects'];
+const customerOps = ['createCustomer', 'getCustomer', 'getManyCustomers', 'updateCustomer'];
+const projectOps = ['getProject', 'getManyProjects'];
 
 export class Work4all implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'work4all',
+		displayName: 'Work4all',
 		name: 'work4all',
 		icon: 'file:w4a.svg',
 		group: ['transform'],
@@ -15,7 +15,7 @@ export class Work4all implements INodeType {
 		usableAsTool: true,
 		subtitle: '={{$parameter["operation"]}}',
 		description: 'Interact with the work4all API',
-		defaults: { name: 'work4all' },
+		defaults: { name: 'Work4all' },
 		inputs: ['main'],
 		outputs: ['main'],
 		credentials: [{ name: 'work4allApi', required: true }],
@@ -26,13 +26,48 @@ export class Work4all implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
-					{ name: 'Create Customer', value: 'createCustomer' },
-					{ name: 'Create Incoming Invoice', value: 'createIncomingInvoice' },
-					{ name: 'Get All Customers', value: 'getAllCustomers' },
-					{ name: 'Get All Projects', value: 'getAllProjects' },
-					{ name: 'Get Customer', value: 'getCustomer' },
-					{ name: 'Get Project', value: 'getProject' },
-					{ name: 'Update Customer', value: 'updateCustomer' },
+					{
+						name: 'Create Customer',
+						value: 'createCustomer',
+						action: 'Create a customer',
+						description: 'Create a new customer in work4all',
+					},
+					{
+						name: 'Create Incoming Invoice',
+						value: 'createIncomingInvoice',
+						action: 'Create an incoming invoice',
+						description: 'Create a new incoming invoice in work4all',
+					},
+					{
+						name: 'Get Customer',
+						value: 'getCustomer',
+						action: 'Get a customer',
+						description: 'Retrieve a single customer by code',
+					},
+					{
+						name: 'Get Many Customers',
+						value: 'getManyCustomers',
+						action: 'Get many customers',
+						description: 'Retrieve a list of customers from work4all',
+					},
+					{
+						name: 'Get Many Projects',
+						value: 'getManyProjects',
+						action: 'Get many projects',
+						description: 'Retrieve a list of projects from work4all',
+					},
+					{
+						name: 'Get Project',
+						value: 'getProject',
+						action: 'Get a project',
+						description: 'Retrieve a single project by code',
+					},
+					{
+						name: 'Update Customer',
+						value: 'updateCustomer',
+						action: 'Update a customer',
+						description: 'Update an existing customer in work4all',
+					},
 				],
 				default: 'createIncomingInvoice',
 			},

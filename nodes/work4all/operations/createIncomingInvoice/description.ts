@@ -113,7 +113,7 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		name: 'invoiceItemsJson',
 		type: 'json',
 		default: '',
-		placeholder: '[{ "account": 1000, "netAmount": 50.50, ... }]',
+		placeholder: 'e.g. [{ "account": 1000, "netAmount": 50.50, ... }]',
 		displayOptions: {
 			show: {
 				operation: ['createIncomingInvoice'],
@@ -168,5 +168,29 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 				],
 			},
 		],
+	},
+
+	// ── Output ────────────────────────────────────────────────────────────────
+	{
+		displayName: 'Output',
+		name: 'invoiceOutput',
+		type: 'options',
+		options: [
+			{ name: 'Raw', value: 'raw', description: 'Return the full API response without any filtering' },
+			{ name: 'Selected Fields', value: 'selectedFields', description: 'Return only the fields specified below' },
+			{ name: 'Simplified', value: 'simplified', description: 'Return a reduced set of the most useful fields' },
+		],
+		default: 'simplified',
+		displayOptions: { show: { operation: ['createIncomingInvoice'] } },
+		description: 'How to filter the response fields',
+	},
+	{
+		displayName: 'Fields',
+		name: 'invoiceOutputFields',
+		type: 'string',
+		default: '',
+		placeholder: 'e.g. ["code","rNummer","datum","rBetrag"]',
+		displayOptions: { show: { operation: ['createIncomingInvoice'], invoiceOutput: ['selectedFields'] } },
+		description: 'JSON array of field names to include in the response',
 	},
 ];

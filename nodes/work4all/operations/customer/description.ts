@@ -1,5 +1,11 @@
 import { INodeProperties } from 'n8n-workflow';
 
+const OUTPUT_OPTIONS = [
+	{ name: 'Raw', value: 'raw', description: 'Return the full API response without any filtering' },
+	{ name: 'Selected Fields', value: 'selectedFields', description: 'Return only the fields specified below' },
+	{ name: 'Simplified', value: 'simplified', description: 'Return a reduced set of the most useful fields' },
+];
+
 export const customerDescription: INodeProperties[] = [
 	// ── customerCode — for getCustomer and updateCustomer ─────────────────────
 	{
@@ -71,28 +77,48 @@ export const customerDescription: INodeProperties[] = [
 		displayOptions: { show: { operation: ['createCustomer', 'updateCustomer'] } },
 	},
 
-	// ── getAllCustomers fields ─────────────────────────────────────────────────
+	// ── getManyCustomers fields ───────────────────────────────────────────────
 	{
 		displayName: 'Page Size',
 		name: 'querySize',
 		type: 'number',
 		default: 100,
-		displayOptions: { show: { operation: ['getAllCustomers'] } },
+		displayOptions: { show: { operation: ['getManyCustomers'] } },
 	},
 	{
 		displayName: 'Page',
 		name: 'queryPage',
 		type: 'number',
 		default: 1,
-		displayOptions: { show: { operation: ['getAllCustomers'] } },
+		displayOptions: { show: { operation: ['getManyCustomers'] } },
 	},
 	{
 		displayName: 'Filter (JSON)',
 		name: 'filter',
 		type: 'string',
 		default: '',
-		displayOptions: { show: { operation: ['getAllCustomers'] } },
-		description: 'Optional filter as JSON, e.g. [{"name":{"$eq":"work4all GmbH"}}]',
-		placeholder: '[{"name":{"$eq":"work4all GmbH"}}]',
+		displayOptions: { show: { operation: ['getManyCustomers'] } },
+		description: 'Optional filter as JSON',
+		placeholder: 'e.g. [{"name":{"$eq":"work4all GmbH"}}]',
+	},
+
+	// ── Output — for getCustomer and getManyCustomers ─────────────────────────
+	{
+		displayName: 'Output',
+		name: 'output',
+		type: 'options',
+		options: OUTPUT_OPTIONS,
+		default: 'simplified',
+		displayOptions: { show: { operation: ['getCustomer', 'getManyCustomers'] } },
+		description: 'How to filter the response fields',
+	},
+	{
+		displayName: 'Fields',
+		name: 'outputFields',
+		type: 'string',
+		default: '',
+		placeholder: 'e.g. ["code","name","eMail","telefon"]',
+		displayOptions: { show: { operation: ['getCustomer', 'getManyCustomers'], output: ['selectedFields'] } },
+		description: 'JSON array of field names to include in the response',
 	},
 ];
