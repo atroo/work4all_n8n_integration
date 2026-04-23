@@ -1,0 +1,73 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: n8n-pg
+  namespace: n8n-prod
+  labels:
+    environment: production
+    app.kubernetes.io/name: n8n
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: n8n
+spec:
+  description: 'Postgres cluster for n8n (Prod)'
+  imageName: ghcr.io/cloudnative-pg/postgresql:17
+
+  # 1 Primary + 1 async Replica = basic HA mit auto-failover
+  instances: 2
+
+  # Bootstrap: initial boot DB "n8n" with User "n8n" is created
+  bootstrap:
+    initdb:
+      database: n8n
+      owner: n8n
+      secret:
+        name: n8n-db-app-user
+      localeCollate: C
+      localeCType: C
+      encoding: UTF8
+      dataChecksums: true
+
+  # Data separat, WAL separat — both on hcloud-volumes-xfs
+  # Hetzner minimum volume size = 10Gi
+  storage:
+    storageClass: hcloud-volumes-xfs
+    size: 20Gi
+  walStorage:
+    storageClass: hcloud-volumes-xfs
+    size: 10Gi
+
+  # Pod Placement: avoid that both instances run on same node
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: preferred
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: '2'
+      memory: 2Gi
+
+  # Postgres-Tuning for n8n-Workload on Hetzner-Volumes
+  postgresql:
+    parameters:
+      max_connections: '200'
+      shared_buffers: '512MB'
+      effective_cache_size: '1536MB'
+      work_mem: '8MB'
+      maintenance_work_mem: '128MB'
+      checkpoint_completion_target: '0.9'
+      max_wal_size: '2GB'
+      min_wal_size: '512MB'
+      random_page_cost: '1.5'
+      log_min_duration_statement: '1000'
+      # Trigger: CNPG sieht einen pg_stat_statements.* Parameter und
+      # lädt die Library + macht CREATE EXTENSION in allen DBs
+      pg_stat_statements.max: '10000'
+      pg_stat_statements.track: 'all'
+
+  # Update-Strategie
+  primaryUpdateStrategy: unsupervised
+  primaryUpdateMethod: switchover

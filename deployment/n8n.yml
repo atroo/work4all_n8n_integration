@@ -1,0 +1,361 @@
+affinity: {}
+config:
+  extraEnv: []
+  extraEnvFrom: []
+  timezone: Europe/Berlin
+
+database:
+  database: n8n
+  host: n8n-pg-rw.n8n-prod.svc.cluster.local
+  passwordSecret:
+    key: password
+    name: n8n-db-app-user
+  port: 5432
+  schema: public
+  ssl:
+    ca: ''
+    cert: ''
+    enabled: false
+    key: ''
+    rejectUnauthorized: true
+  type: postgresdb
+  useExternal: true
+  user: n8n
+
+executions:
+  concurrency:
+    productionLimit: -1
+  data:
+    saveManualExecutions: true
+    saveOnError: all
+    saveOnProgress: false
+    saveOnSuccess: all
+  extraEnv: []
+  pruning:
+    enabled: true
+    hardDeleteBuffer: 1
+    hardDeleteInterval: 15
+    maxAge: 336
+    maxCount: 10000
+    softDeleteInterval: 60
+  timeout: -1
+  timeoutMax: 3600
+
+extraVolumeMounts: []
+extraVolumes: []
+fullnameOverride: ''
+
+hpa:
+  main:
+    enabled: false
+    maxReplicas: 5
+    minReplicas: 1
+    targetCPUUtilizationPercentage: 80
+  webhookProcessor:
+    enabled: false
+    maxReplicas: 50
+    minReplicas: 2
+    targetCPUUtilizationPercentage: 60
+  worker:
+    enabled: false
+    maxReplicas: 20
+    minReplicas: 2
+    targetCPUUtilizationPercentage: 70
+
+image:
+  pullPolicy: IfNotPresent
+  repository: docker.n8n.io/n8nio/n8n
+  tag: stable
+
+ingress:
+  enabled: false
+  hosts:
+    - host: n8n.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  sticky:
+    cookieExpires: '172800'
+    cookieMaxAge: '172800'
+    cookieName: n8n_affinity
+    enabled: false
+  webhookProcessor:
+    annotations: {}
+    className: ''
+    enabled: false
+    tls: []
+
+keda:
+  enabled: false
+  webhookProcessor:
+    cooldownPeriod: 120
+    enabled: false
+    maxReplicaCount: 50
+    minReplicaCount: 2
+    pollingInterval: 15
+    triggers: []
+  worker:
+    cooldownPeriod: 300
+    maxReplicaCount: 20
+    minReplicaCount: 2
+    pollingInterval: 15
+    triggers:
+      - authenticationRef:
+          name: ''
+        metadata:
+          address: ''
+          listLength: '5'
+          listName: bull:default:wait
+        type: redis
+
+license:
+  activationKey: ''
+  enabled: false
+  existingSecret:
+    key: license-key
+    name: ''
+
+lifecycle:
+  main:
+    preStop:
+      command:
+        - /bin/sh
+        - '-c'
+        - sleep 10
+      enabled: true
+    terminationGracePeriodSeconds: 60
+  webhookProcessor:
+    preStop:
+      command:
+        - /bin/sh
+        - '-c'
+        - sleep 10
+      enabled: true
+    terminationGracePeriodSeconds: 60
+  worker:
+    preStop:
+      command:
+        - /bin/sh
+        - '-c'
+        - sleep 10
+      enabled: true
+    terminationGracePeriodSeconds: 60
+
+multiMain:
+  antiAffinity:
+    type: preferred
+  enabled: false
+  replicas: 2
+  setup:
+    checkInterval: 3
+    keyTtl: 10
+  topologySpreadConstraints:
+    enabled: false
+    maxSkew: 1
+    whenUnsatisfiable: ScheduleAnyway
+
+nameOverride: ''
+networkPolicy:
+  enabled: false
+nodeSelector: {}
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+persistence:
+  accessModes:
+    - ReadWriteOnce
+  enabled: false
+  size: 10Gi
+  storageClassName: ''
+
+probes:
+  liveness:
+    enabled: true
+    failureThreshold: 6
+    initialDelaySeconds: 30
+    path: /healthz
+    periodSeconds: 20
+    timeoutSeconds: 5
+  readiness:
+    enabled: true
+    failureThreshold: 6
+    initialDelaySeconds: 10
+    path: /healthz
+    periodSeconds: 10
+    timeoutSeconds: 3
+  worker:
+    liveness:
+      command:
+        - /bin/sh
+        - '-c'
+        - pgrep -f 'n8n worker' > /dev/null
+      enabled: true
+      failureThreshold: 3
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      timeoutSeconds: 5
+      type: exec
+    readiness:
+      command:
+        - /bin/sh
+        - '-c'
+        - pgrep -f 'n8n worker' > /dev/null
+      enabled: true
+      failureThreshold: 6
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 3
+      type: exec
+
+queueMode:
+  enabled: true
+  workerConcurrency: 10
+  workerReplicaCount: 2
+
+rbac:
+  create: true
+
+redis:
+  clusterNodes: ''
+  database: 0
+  dualstack: false
+  enabled: true
+  extraEnv: []
+  healthCheck:
+    enabled: false
+    port: 5678
+  host: valkey.n8n-prod.svc.cluster.local
+  passwordSecret:
+    key: password
+    name: n8n-redis-password
+  port: 6379
+  prefix: ''
+  timeout: 10000
+  tls: false
+  useExternal: true
+  username: default
+  worker:
+    lockDuration: 60000
+    lockRenewTime: 10000
+    maxStalledCount: 1
+    stalledInterval: 30000
+    timeout: 30
+
+replicaCount: 1
+
+resources:
+  main:
+    limits:
+      cpu: '1'
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+  webhookProcessor:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  worker:
+    limits:
+      cpu: '1'
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+
+s3:
+  auth:
+    accessKeyId: ''
+    autoDetect: false
+    secretAccessKeySecret:
+      key: ''
+      name: ''
+  bucket:
+    host: ''
+    name: ''
+    region: ''
+  enabled: false
+  storage:
+    availableModes: filesystem
+    extraEnv: []
+    forcePathStyle: false
+    mode: filesystem
+
+secretRefs:
+  existingSecret: n8n-secrets
+  env: {}
+
+securityContext:
+  enabled: true
+  fsGroup: 1000
+  runAsGroup: 1000
+  runAsUser: 1000
+
+service:
+  annotations: {}
+  main:
+    annotations: {}
+  port: 5678
+  sessionAffinity:
+    enabled: false
+    timeoutSeconds: 10800
+  type: ClusterIP
+  webhookProcessor:
+    annotations: {}
+
+serviceAccount:
+  annotations: {}
+  awsRoleArn: ''
+  create: true
+  name: n8n
+
+strategy: {}
+
+taskRunners:
+  authToken:
+    existingSecret: n8n-runner-token
+    existingSecretKey: auth-token
+    value: ''
+  broker:
+    listenAddress: 0.0.0.0
+    port: 5679
+  customConfig:
+    configMapKey: n8n-task-runners.json
+    configMapName: ''
+    enabled: false
+  enabled: true
+  extraEnv: []
+  image:
+    pullPolicy: IfNotPresent
+    repository: n8nio/runners
+    tag: ''
+  launcher:
+    autoShutdownTimeout: 15
+    logLevel: info
+  mode: external
+  nativePythonRunner: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+tolerations: []
+
+webhook:
+  enabled: true
+  extraEnv: []
+  timeout: 120000
+  url: ''
+
+webhookProcessor:
+  disableProductionWebhooksOnMainProcess: true
+  enabled: false
+  replicaCount: 2
