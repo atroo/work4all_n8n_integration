@@ -3,6 +3,72 @@
   "nodes": [
     {
       "parameters": {
+        "resource": "folder",
+        "displayName": "Neue Eingangsrechnungen",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        -64
+      ],
+      "id": "8fddf03c-5b4f-42c4-b983-bbf4e04cce10",
+      "name": "Create Folder: Neue Eingangsrechnungen",
+      "webhookId": "1700647d-4adb-4cdc-95f2-dec827a1cd45",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "iZNGowBVWVT0AWBr",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "displayName": "Fehler",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        -64
+      ],
+      "id": "0b835200-d028-4076-9950-9b631d810bfa",
+      "name": "Create Folder: Fehler",
+      "webhookId": "1700647d-4adb-4cdc-95f2-dec827a1cd45",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "iZNGowBVWVT0AWBr",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "displayName": "Verarbeitet",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        -64
+      ],
+      "id": "5291d773-01ed-4a76-a605-634acff41575",
+      "name": "Create Folder: Verarbeitet",
+      "webhookId": "1700647d-4adb-4cdc-95f2-dec827a1cd45",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "iZNGowBVWVT0AWBr",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
         "pollTimes": {
           "item": [
             {
@@ -11,7 +77,9 @@
           ]
         },
         "filters": {
-          "custom": "not categories/any(c:c eq 'AI/Processed')"
+          "foldersToInclude": [
+            "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdLAAA="
+          ]
         },
         "options": {
           "downloadAttachments": true
@@ -20,60 +88,125 @@
       "type": "n8n-nodes-base.microsoftOutlookTrigger",
       "typeVersion": 1,
       "position": [
-        -544,
-        160
+        -752,
+        320
       ],
-      "id": "fd8d850e-bf7c-4ddf-9154-38db0c035c7f",
-      "name": "Microsoft Outlook Trigger",
+      "id": "6b06375b-dca3-43a1-94ca-a24bd0305bac",
+      "name": "Trigger: Emails in Neue Eingangsrechnungen",
       "credentials": {
         "microsoftOutlookOAuth2Api": {
-          "id": "DBrnRozjem4ziL1I",
+          "id": "iZNGowBVWVT0AWBr",
           "name": "Microsoft Outlook account"
         }
       }
     },
     {
       "parameters": {
-        "method": "PATCH",
-        "url": "=https://graph.microsoft.com/v1.0/me/messages/{{$('Microsoft Outlook Trigger').first().json.id}}",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "microsoftOutlookOAuth2Api",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
+        "operation": "move",
+        "messageId": {
+          "__rl": true,
+          "value": "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwBGAAAAAAB0sAUOHy4fSK8zXAyosp7vBwD5F53ZtU8FQ5T0NXXlFAlwAAAAAAEMAAD5F53ZtU8FQ5T0NXXlFAlwAAAYN8WJAAA=",
+          "mode": "list",
+          "cachedResultName": "2-attachments",
+          "cachedResultUrl": "https://outlook.office365.com/owa/?ItemID=AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwBGAAAAAAB0sAUOHy4fSK8zXAyosp7vBwD5F53ZtU8FQ5T0NXXlFAlwAAAAAAEMAAD5F53ZtU8FQ5T0NXXlFAlwAAAYN8WJAAA%3D&exvsurl=1&viewmodel=ReadMessageItem"
         },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{\n  \"categories\": [\"AI/Processed\"]\n}",
-        "options": {}
+        "folderId": {
+          "__rl": true,
+          "value": "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdLAAA=",
+          "mode": "list",
+          "cachedResultName": "Neue Eingangsrechnungen",
+          "cachedResultUrl": "https://outlook.office365.com/mail/AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdLAAA%3D"
+        }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
       "position": [
-        32,
-        160
+        -960,
+        32
       ],
-      "id": "3bd92eb6-ccfa-480f-83a3-70c0737162bd",
-      "name": "Label Email",
+      "id": "fd4d88bf-0961-4ca1-9969-9c5780ab5244",
+      "name": "Move to Eingangsrechnungen",
+      "webhookId": "68163199-e9c4-4c1f-9626-3d479e8bbdac",
       "credentials": {
         "microsoftOutlookOAuth2Api": {
-          "id": "DBrnRozjem4ziL1I",
+          "id": "iZNGowBVWVT0AWBr",
           "name": "Microsoft Outlook account"
         }
       }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "messageId": {
+          "__rl": true,
+          "value": "={{ $('Trigger: Emails in Neue Eingangsrechnungen').item.json.id }}",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdMAAA=",
+          "mode": "list",
+          "cachedResultName": "Fehler",
+          "cachedResultUrl": "https://outlook.office365.com/mail/AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdMAAA%3D"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        672,
+        304
+      ],
+      "id": "7c33dece-9eba-4330-8820-8652e25465e5",
+      "name": "Move into Fehler Folder",
+      "webhookId": "06adafb0-c7b3-402e-977f-6025ef20348b",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "iZNGowBVWVT0AWBr",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d26a6695-69cd-4253-a407-9ced41587f40",
+              "leftValue": "={{ $json.errors }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -32,
+        160
+      ],
+      "id": "51b9724c-9ebc-44eb-a5a2-58c1e264e9e3",
+      "name": "Has Errors?"
     },
     {
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "0aotulZHh0GFCjSV",
+          "value": "pJ8yNsaBKgLj6THO",
           "mode": "list",
-          "cachedResultUrl": "/workflow/0aotulZHh0GFCjSV",
+          "cachedResultUrl": "/workflow/pJ8yNsaBKgLj6THO",
           "cachedResultName": "work4all-invoice-workflow"
         },
         "workflowInputs": {
@@ -89,16 +222,107 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -256,
-        160
+        -464,
+        288
       ],
       "id": "a3673552-3479-468e-9a50-616f04cdfab1",
-      "name": "Call 'work4all-invoice-workflow'"
+      "name": "Call 'work4all-invoice-workflow'",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "toRecipients": "laurin@atroo.de",
+        "subject": "Da ist was schiefgelaufen",
+        "bodyContent": "={{ $('Call \\'work4all-invoice-workflow\\'').item.json.error ?? $('Call \\'work4all-invoice-workflow\\'').item.json.errors.toJsonString() }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        432,
+        368
+      ],
+      "id": "1f8e3657-5def-4394-aed1-c841dfed0c65",
+      "name": "Send Error Message",
+      "webhookId": "9741939e-2460-4965-ae55-e69ca4aa0c44",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "iZNGowBVWVT0AWBr",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "messageId": {
+          "__rl": true,
+          "value": "={{ $json.outlookMessageId }}",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdNAAA=",
+          "mode": "list",
+          "cachedResultName": "Verarbeitet",
+          "cachedResultUrl": "https://outlook.office365.com/mail/AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdNAAA%3D"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        352,
+        32
+      ],
+      "id": "383b088a-a652-4fbf-a809-7c111f5cdf92",
+      "name": "Move into Verarbeitet",
+      "webhookId": "49ed964c-3fb2-467b-9fd6-6088f71db811",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "iZNGowBVWVT0AWBr",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return {'error':$input.first().json.error }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        288
+      ],
+      "id": "673c5e06-99d9-4319-872d-df69ead010a0",
+      "name": "Code in JavaScript"
     }
   ],
   "pinData": {},
   "connections": {
-    "Microsoft Outlook Trigger": {
+    "Create Folder: Neue Eingangsrechnungen": {
+      "main": [
+        [
+          {
+            "node": "Create Folder: Fehler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Folder: Fehler": {
+      "main": [
+        [
+          {
+            "node": "Create Folder: Verarbeitet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger: Emails in Neue Eingangsrechnungen": {
       "main": [
         [
           {
@@ -109,11 +333,68 @@
         ]
       ]
     },
+    "Move into Fehler Folder": {
+      "main": [
+        []
+      ]
+    },
+    "Has Errors?": {
+      "main": [
+        [
+          {
+            "node": "Send Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Move into Verarbeitet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Call 'work4all-invoice-workflow'": {
       "main": [
         [
           {
-            "node": "Label Email",
+            "node": "Has Errors?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move into Verarbeitet": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Error Message": {
+      "main": [
+        [
+          {
+            "node": "Move into Fehler Folder",
             "type": "main",
             "index": 0
           }
@@ -124,21 +405,13 @@
   "active": false,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": false
+    "binaryMode": "separate"
   },
-  "versionId": "8eb5cb37-c804-4fb9-baec-25bc27902938",
+  "versionId": "0809d2a5-62d5-47f9-9df8-d97c250703a4",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "8f9ec9901e41a08bb2ba8c686bff4a1d25646ff7f206d842b1aa2b96fc47b5f3"
+    "instanceId": "296be6635839d6898d9738c77c7973f94245430cfacaa9ab6123dfbd23a17154"
   },
-  "id": "DovFb3SqbHdOlnZe",
-  "tags": [
-    {
-      "updatedAt": "2026-03-16T07:09:47.577Z",
-      "createdAt": "2026-03-16T07:09:47.577Z",
-      "id": "i74RPAhdxvcl6n37",
-      "name": "w4a invoice"
-    }
-  ]
+  "id": "V63SIFVQm3TABx2M",
+  "tags": []
 }
