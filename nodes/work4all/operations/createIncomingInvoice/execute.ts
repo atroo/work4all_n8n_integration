@@ -84,8 +84,8 @@ interface UploadResponse {
 }
 
 async function uploadFile(
+	ctx: IExecuteFunctions,
 	baseUrl: string,
-	accessToken: string,
 	buffer: Buffer,
 	fileName: string,
 	mimeType: string,
@@ -94,17 +94,12 @@ async function uploadFile(
 	const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
 	form.append('myFile', new Blob([arrayBuffer], { type: mimeType }), fileName);
 
-	const response = await fetch(`${baseUrl}/api/file?type=TempDatei`, {
+	const json = await ctx.helpers.httpRequestWithAuthentication.call(ctx, 'work4allApi', {
 		method: 'POST',
-		headers: { Authorization: `Bearer ${accessToken}` },
-		body: form,
-	});
+		url: `${baseUrl}/api/file?type=TempDatei`,
+		body: form as unknown as object,
+	}) as UploadResponse;
 
-	if (!response.ok) {
-		throw new Error(`File upload failed for "${fileName}" (HTTP ${response.status})`);
-	}
-
-	const json = (await response.json()) as UploadResponse;
 	if (!json.fileStored || !json.generatedObject) {
 		throw new Error(
 			`File upload rejected for "${fileName}": ${json.errorMessage ?? JSON.stringify(json)}`,
@@ -116,7 +111,7 @@ async function uploadFile(
 
 export async function execute(this: IExecuteFunctions, itemIndex: number): Promise<object> {
 	try {
-		const { baseUrl, accessToken } = await getClient(this);
+		const { baseUrl } = await getClient(this);
 
 		const dataMode = this.getNodeParameter('dataMode', itemIndex) as string;
 
@@ -171,8 +166,8 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 			const binaryData = this.helpers.assertBinaryData(itemIndex, binaryPropertyName);
 			const buffer = await this.helpers.getBinaryDataBuffer(itemIndex, binaryPropertyName);
 			const tempFileId = await uploadFile(
+				this,
 				baseUrl,
-				accessToken,
 				buffer,
 				binaryData.fileName ?? 'attachment',
 				binaryData.mimeType,
@@ -185,13 +180,10 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 		const invoiceOutput = this.getNodeParameter('invoiceOutput', itemIndex, 'simplified') as string;
 		const invoiceOutputFields = this.getNodeParameter('invoiceOutputFields', itemIndex, '') as string;
 
-		const result = await this.helpers.httpRequest({
+		const result = await this.helpers.httpRequestWithAuthentication.call(this, 'work4allApi', {
 			method: 'POST',
 			url: `${baseUrl}/graphql`,
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-				'Content-Type': 'application/json',
-			},
+			headers: { 'Content-Type': 'application/json' },
 			body: {
 				query: GQL_MUTATION,
 				variables: {

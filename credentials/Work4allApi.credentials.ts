@@ -1,11 +1,18 @@
-import { ICredentialTestRequest, ICredentialType, INodeProperties } from 'n8n-workflow';
+import { ICredentialType, INodeProperties } from 'n8n-workflow';
 
 export class Work4allApi implements ICredentialType {
 	name = 'work4allApi';
 	displayName = 'Work4all API';
+	extends = ['oAuth2Api'];
 	icon = { light: 'file:../nodes/work4all/w4a.svg', dark: 'file:../nodes/work4all/w4a.svg' } as ICredentialType['icon'];
 	documentationUrl = 'https://docs.work4all.de';
 	properties: INodeProperties[] = [
+		{
+			displayName: 'Grant Type',
+			name: 'grantType',
+			type: 'hidden',
+			default: 'clientCredentials',
+		},
 		{
 			displayName: 'API URL',
 			name: 'baseUrl',
@@ -14,37 +21,11 @@ export class Work4allApi implements ICredentialType {
 			required: true,
 		},
 		{
-			displayName: 'Token URL',
-			name: 'tokenUrl',
+			displayName: 'Access Token URL',
+			name: 'accessTokenUrl',
 			type: 'string',
-			default: '',
-			required: true,
-			description: 'OAuth2 token endpoint, e.g. https://auth.work4all.de/connect/token',
-		},
-		{
-			displayName: 'Client ID',
-			name: 'clientId',
-			type: 'string',
-			typeOptions: { password: true },
-			default: '',
-			required: true,
-		},
-		{
-			displayName: 'Client Secret',
-			name: 'clientSecret',
-			type: 'string',
-			typeOptions: { password: true },
-			default: '',
+			default: 'https://auth.work4all.de/connect/token',
 			required: true,
 		},
 	];
-
-	test: ICredentialTestRequest = {
-		request: {
-			method: 'POST',
-			url: '={{$credentials.tokenUrl}}',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: '={{"grant_type=client_credentials&client_id=" + encodeURIComponent($credentials.clientId) + "&client_secret=" + encodeURIComponent($credentials.clientSecret)}}',
-		},
-	};
 }

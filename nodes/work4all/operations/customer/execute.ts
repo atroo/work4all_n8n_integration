@@ -108,22 +108,20 @@ function filterCustomerResponse(response: unknown, output: string, outputFieldsR
 }
 
 export async function execute(this: IExecuteFunctions, itemIndex: number): Promise<object> {
-	const { baseUrl, accessToken } = await getClient(this);
 	const operation = this.getNodeParameter('operation', itemIndex) as string;
 
-	const gql = (query: string, variables: Record<string, unknown>) =>
-		this.helpers.httpRequest({
-			method: 'POST',
-			url: `${baseUrl}/graphql`,
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-				'Content-Type': 'application/json',
-			},
-			body: { query, variables },
-			json: true,
-		});
-
 	try {
+		const { baseUrl } = await getClient(this);
+
+		const gql = (query: string, variables: Record<string, unknown>) =>
+			this.helpers.httpRequestWithAuthentication.call(this, 'work4allApi', {
+				method: 'POST',
+				url: `${baseUrl}/graphql`,
+				headers: { 'Content-Type': 'application/json' },
+				body: { query, variables },
+				json: true,
+			});
+
 		if (operation === 'getCustomer') {
 			const customerCode = this.getNodeParameter('customerCode', itemIndex) as number;
 			const output = this.getNodeParameter('output', itemIndex, 'simplified') as string;

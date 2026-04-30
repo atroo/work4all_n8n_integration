@@ -18,7 +18,7 @@ You will need:
 | Field | Description |
 |-------|-------------|
 | API URL | Base URL of your work4all instance, e.g. `https://api.work4all.de` |
-| Token URL | OAuth2 token endpoint, e.g. `https://auth.work4all.de/connect/token` |
+| Access Token URL | OAuth2 token endpoint, e.g. `https://auth.work4all.de/connect/token` |
 | Client ID | Your OAuth2 client ID |
 | Client Secret | Your OAuth2 client secret |
 

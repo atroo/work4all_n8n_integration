@@ -84,7 +84,7 @@ function baseItems() {
 /** Base mock options using JSON input mode (no attachments) */
 function baseOpts(testName: string, extraParams: Record<string, unknown> = {}) {
 	return {
-		credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+		credentials: { baseUrl: BASE_URL, accessTokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
 		parameters: {
 			'dataFields.details': baseDetails(testName),
 			inputMode: 'json',
@@ -98,7 +98,7 @@ function baseOpts(testName: string, extraParams: Record<string, unknown> = {}) {
 /** Base mock options using manual mapping input mode */
 function baseOptsManual(testName: string, extraParams: Record<string, unknown> = {}) {
 	return {
-		credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+		credentials: { baseUrl: BASE_URL, accessTokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
 		parameters: {
 			'dataFields.details': baseDetails(testName),
 			inputMode: 'manual',
@@ -171,7 +171,7 @@ describe('createIncomingInvoice (integration)', () => {
 		};
 
 		const mock = createMockExecuteFunctions({
-			credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+			credentials: { baseUrl: BASE_URL, accessTokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
 			parameters: {
 				dataMode: 'json',
 				invoiceDataJson: JSON.stringify(invoiceData),
@@ -209,14 +209,14 @@ describe('createIncomingInvoice (integration)', () => {
 
 		// Without attachment
 		const mockNoAttach = createMockExecuteFunctions({
-			credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+			credentials: { baseUrl: BASE_URL, accessTokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
 			parameters: { dataMode: 'json', invoiceDataJson: JSON.stringify(invoiceData), attachmentsUi: {} },
 		});
 		assertSuccess(await execute.call(mockNoAttach, 0));
 
 		// With attachment
 		const mockWithAttach = createMockExecuteFunctions({
-			credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+			credentials: { baseUrl: BASE_URL, accessTokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
 			parameters: {
 				dataMode: 'json',
 				invoiceDataJson: JSON.stringify({ ...invoiceData, invoiceNumberSupplier: `IT-${Date.now()}` }),

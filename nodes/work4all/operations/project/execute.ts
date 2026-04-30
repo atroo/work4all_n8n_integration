@@ -104,22 +104,20 @@ function filterProjectResponse(response: unknown, output: string, outputFieldsRa
 }
 
 export async function execute(this: IExecuteFunctions, itemIndex: number): Promise<object> {
-	const { baseUrl, accessToken } = await getClient(this);
 	const operation = this.getNodeParameter('operation', itemIndex) as string;
 
-	const gql = (variables: Record<string, unknown>) =>
-		this.helpers.httpRequest({
-			method: 'POST',
-			url: `${baseUrl}/graphql`,
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-				'Content-Type': 'application/json',
-			},
-			body: { query: GQL_GET_PROJEKTE, variables },
-			json: true,
-		});
-
 	try {
+		const { baseUrl } = await getClient(this);
+
+		const gql = (variables: Record<string, unknown>) =>
+			this.helpers.httpRequestWithAuthentication.call(this, 'work4allApi', {
+				method: 'POST',
+				url: `${baseUrl}/graphql`,
+				headers: { 'Content-Type': 'application/json' },
+				body: { query: GQL_GET_PROJEKTE, variables },
+				json: true,
+			});
+
 		if (operation === 'getProject') {
 			const projectCode = this.getNodeParameter('projectCode', itemIndex) as number;
 			const output = this.getNodeParameter('projectOutput', itemIndex, 'simplified') as string;
