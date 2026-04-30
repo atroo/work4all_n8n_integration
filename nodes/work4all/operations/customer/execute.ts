@@ -114,7 +114,7 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 		const { baseUrl } = await getClient(this);
 
 		const gql = (query: string, variables: Record<string, unknown>) =>
-			this.helpers.httpRequestWithAuthentication.call(this, 'work4allApi', {
+			this.helpers.httpRequestWithAuthentication.call(this, 'work4allOAuth2Api', {
 				method: 'POST',
 				url: `${baseUrl}/graphql`,
 				headers: { 'Content-Type': 'application/json' },

@@ -1,8 +1,8 @@
 import { ICredentialType, INodeProperties } from 'n8n-workflow';
 
-export class Work4allApi implements ICredentialType {
-	name = 'work4allApi';
-	displayName = 'Work4all API';
+export class Work4allOAuth2Api implements ICredentialType {
+	name = 'work4allOAuth2Api';
+	displayName = 'Work4all OAuth2 API';
 	extends = ['oAuth2Api'];
 	icon = { light: 'file:../nodes/work4all/w4a.svg', dark: 'file:../nodes/work4all/w4a.svg' } as ICredentialType['icon'];
 	documentationUrl = 'https://docs.work4all.de';

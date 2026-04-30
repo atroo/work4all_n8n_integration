@@ -25,7 +25,6 @@ export const customerDescription: INodeProperties[] = [
 		type: 'string',
 		default: '',
 		displayOptions: { show: { operation: ['createCustomer', 'updateCustomer'] } },
-		description: 'Company name',
 	},
 	{
 		displayName: 'Email',
