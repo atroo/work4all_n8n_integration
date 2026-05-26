@@ -8,47 +8,62 @@ const GQL_MUTATION = `
 		$receipts: InputErpAnhangAttachementsRelation
 	) {
 		ahf_CreateCompleteIncomingInvoice(input: $data, receipts: $receipts) {
-			code
-			notiz
-			rNummer
-			rNummerbeiLieferant
-			datum
-			faelligDatum
-			eingangsDatum
-			buchungsDatum
-			rBetrag
-			rMwst
-			summe
-			waehrungCode
-			paymentTermDays
-			skontoProzent
-			skontoTg
-			statusCode
-			creationDate
-			sDObjMemberCode
-			projektCode
-			buchungen {
+			newSupplierCreated
+			newSupplierCode
+			accountSet
+			taxKeytSet
+			invoiceCreated
+			errorMessage
+			invoice {
 				code
-				sachkontoCode
-				sachkontoNummer
-				kostenstelleCode
-				kostenstelleNummer
-				kostengruppeCode
-				projektCode
-				steuerschluessel
-				mwst
-				valueNet
-				mwstBetrag
-				anteilDM
 				notiz
+				rNummer
+				rNummerbeiLieferant
+				datum
+				faelligDatum
+				eingangsDatum
+				buchungsDatum
+				buchungen {
+					kostengruppeCode
+					kostenstelleCode
+					kostenstelleNummer
+					anteilDM
+					mwst
+					mwstBetrag
+					notiz
+					projektCode
+					sachkontoCode
+					sachkontoNummer
+					steuerschluessel
+				}
+				lieferant { code nummer name }
+				projekt { code nummer name }
 			}
-			lieferant { code nummer name }
-			projekt { code nummer name }
 		}
 	}
 `;
 
-const SIMPLIFIED_INVOICE_FIELDS = ['code', 'rNummer', 'rNummerbeiLieferant', 'datum', 'rBetrag', 'summe', 'waehrungCode', 'paymentTermDays', 'statusCode', 'lieferant'];
+const WRAPPER_FIELDS = [
+	'newSupplierCreated',
+	'newSupplierCode',
+	'accountSet',
+	'taxKeytSet',
+	'invoiceCreated',
+	'errorMessage',
+];
+
+const SIMPLIFIED_INVOICE_FIELDS = ['code', 'rNummer', 'rNummerbeiLieferant', 'datum', 'lieferant'];
+
+type MutationPayload = Record<string, unknown> & {
+	invoice?: Record<string, unknown>;
+	errorMessage?: string;
+	invoiceCreated?: boolean;
+};
+
+type GqlResponse = {
+	data?: { ahf_CreateCompleteIncomingInvoice?: MutationPayload };
+	errors?: Array<{ message: string }>;
+};
 
 function pickFields(obj: Record<string, unknown>, fields: string[]): Record<string, unknown> {
 	const result: Record<string, unknown> = {};
@@ -60,21 +75,52 @@ function pickFields(obj: Record<string, unknown>, fields: string[]): Record<stri
 
 function filterInvoiceResponse(response: unknown, output: string, outputFieldsRaw: string): unknown {
 	if (output === 'raw') return response;
-	const res = response as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } };
-	const invoice = res.data?.ahf_CreateCompleteIncomingInvoice;
-	if (!invoice || typeof invoice !== 'object') return response;
+	const res = response as GqlResponse;
+	const payload = res.data?.ahf_CreateCompleteIncomingInvoice;
+	if (!payload || typeof payload !== 'object') return response;
+
+	const invoice = payload.invoice;
 	const fields =
 		output === 'simplified'
 			? SIMPLIFIED_INVOICE_FIELDS
 			: (JSON.parse(outputFieldsRaw || '[]') as string[]);
 	if (!fields.length) return response;
+
+	const filtered: MutationPayload = {
+		...pickFields(payload, WRAPPER_FIELDS),
+	};
+	if (invoice && typeof invoice === 'object') {
+		filtered.invoice = pickFields(invoice, fields);
+	}
+
 	return {
 		...res,
 		data: {
 			...res.data,
-			ahf_CreateCompleteIncomingInvoice: pickFields(invoice, fields),
+			ahf_CreateCompleteIncomingInvoice: filtered,
 		},
 	};
+}
+
+function assertMutationSuccess(response: unknown): void {
+	const res = response as GqlResponse;
+	if (res.errors?.length) {
+		throw new Error(`GraphQL errors: ${res.errors.map((e) => e.message).join(', ')}`);
+	}
+	const payload = res.data?.ahf_CreateCompleteIncomingInvoice;
+	if (!payload) {
+		throw new Error('GraphQL response missing ahf_CreateCompleteIncomingInvoice');
+	}
+	if (payload.errorMessage) {
+		throw new Error(String(payload.errorMessage));
+	}
+	if (payload.invoiceCreated === false) {
+		throw new Error('Invoice was not created (invoiceCreated: false)');
+	}
+	const code = payload.invoice?.code;
+	if (typeof code !== 'number' || code <= 0) {
+		throw new Error('GraphQL response missing a valid invoice.code');
+	}
 }
 
 interface UploadResponse {
@@ -201,6 +247,8 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 			},
 			json: true,
 		});
+
+		assertMutationSuccess(result);
 
 		return filterInvoiceResponse(result, invoiceOutput, invoiceOutputFields) as object;
 	} catch (error) {

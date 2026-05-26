@@ -33,7 +33,9 @@ const CLIENT_SECRET = process.env['W4A_API_CLIENT_SECRET'] ?? '';
 const SUPPLIER_CODE = parseInt(process.env['W4A_TEST_SUPPLIER_CODE'] ?? '0', 10);
 const ACCOUNT_CODE = parseInt(process.env['W4A_TEST_ACCOUNT_CODE'] ?? '0', 10);
 
-const hasCredentials = Boolean(BASE_URL && TOKEN_URL && CLIENT_ID && CLIENT_SECRET && SUPPLIER_CODE && ACCOUNT_CODE);
+const hasCredentials = Boolean(
+	BASE_URL && TOKEN_URL && CLIENT_ID && CLIENT_SECRET && SUPPLIER_CODE && ACCOUNT_CODE,
+);
 
 // Use `it` when credentials are present, `it.skip` otherwise — tests will appear
 // as "skipped" in the report rather than failing the suite in CI without credentials.
@@ -84,7 +86,12 @@ function baseItems() {
 /** Base mock options using JSON input mode (no attachments) */
 function baseOpts(testName: string, extraParams: Record<string, unknown> = {}) {
 	return {
-		credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+		credentials: {
+			baseUrl: BASE_URL,
+			tokenUrl: TOKEN_URL,
+			clientId: CLIENT_ID,
+			clientSecret: CLIENT_SECRET,
+		},
 		parameters: {
 			'dataFields.details': baseDetails(testName),
 			inputMode: 'json',
@@ -98,7 +105,12 @@ function baseOpts(testName: string, extraParams: Record<string, unknown> = {}) {
 /** Base mock options using manual mapping input mode */
 function baseOptsManual(testName: string, extraParams: Record<string, unknown> = {}) {
 	return {
-		credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+		credentials: {
+			baseUrl: BASE_URL,
+			tokenUrl: TOKEN_URL,
+			clientId: CLIENT_ID,
+			clientSecret: CLIENT_SECRET,
+		},
 		parameters: {
 			'dataFields.details': baseDetails(testName),
 			inputMode: 'manual',
@@ -123,7 +135,13 @@ function baseOptsManual(testName: string, extraParams: Record<string, unknown> =
 // ── Helper: assert a successful GraphQL response ──────────────────────────────
 
 interface GqlResponse {
-	data?: { ahf_CreateCompleteIncomingInvoice?: { code: number; rNummer?: string } };
+	data?: {
+		ahf_CreateCompleteIncomingInvoice?: {
+			invoiceCreated?: boolean;
+			errorMessage?: string;
+			invoice?: { code: number; rNummer?: string };
+		};
+	};
 	errors?: Array<{ message: string }>;
 }
 
@@ -132,7 +150,9 @@ function assertSuccess(result: unknown): void {
 	if (res.errors?.length) {
 		throw new Error(`GraphQL errors: ${res.errors.map((e) => e.message).join(', ')}`);
 	}
-	expect(res.data?.ahf_CreateCompleteIncomingInvoice?.code).toBeGreaterThan(0);
+	const payload = res.data?.ahf_CreateCompleteIncomingInvoice;
+	expect(payload?.invoiceCreated).toBe(true);
+	expect(payload?.invoice?.code).toBeGreaterThan(0);
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -171,7 +191,12 @@ describe('createIncomingInvoice (integration)', () => {
 		};
 
 		const mock = createMockExecuteFunctions({
-			credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+			credentials: {
+				baseUrl: BASE_URL,
+				tokenUrl: TOKEN_URL,
+				clientId: CLIENT_ID,
+				clientSecret: CLIENT_SECRET,
+			},
 			parameters: {
 				dataMode: 'json',
 				invoiceDataJson: JSON.stringify(invoiceData),
@@ -209,17 +234,34 @@ describe('createIncomingInvoice (integration)', () => {
 
 		// Without attachment
 		const mockNoAttach = createMockExecuteFunctions({
-			credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
-			parameters: { dataMode: 'json', invoiceDataJson: JSON.stringify(invoiceData), attachmentsUi: {} },
+			credentials: {
+				baseUrl: BASE_URL,
+				tokenUrl: TOKEN_URL,
+				clientId: CLIENT_ID,
+				clientSecret: CLIENT_SECRET,
+			},
+			parameters: {
+				dataMode: 'json',
+				invoiceDataJson: JSON.stringify(invoiceData),
+				attachmentsUi: {},
+			},
 		});
 		assertSuccess(await execute.call(mockNoAttach, 0));
 
 		// With attachment
 		const mockWithAttach = createMockExecuteFunctions({
-			credentials: { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+			credentials: {
+				baseUrl: BASE_URL,
+				tokenUrl: TOKEN_URL,
+				clientId: CLIENT_ID,
+				clientSecret: CLIENT_SECRET,
+			},
 			parameters: {
 				dataMode: 'json',
-				invoiceDataJson: JSON.stringify({ ...invoiceData, invoiceNumberSupplier: `IT-${Date.now()}` }),
+				invoiceDataJson: JSON.stringify({
+					...invoiceData,
+					invoiceNumberSupplier: `IT-${Date.now()}`,
+				}),
 				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
 			},
 			binaryData: {
@@ -275,10 +317,7 @@ describe('createIncomingInvoice (integration)', () => {
 		const mock = createMockExecuteFunctions({
 			...baseOpts('multi PDF', {
 				attachmentsUi: {
-					files: [
-						{ binaryPropertyName: 'receipt0' },
-						{ binaryPropertyName: 'receipt1' },
-					],
+					files: [{ binaryPropertyName: 'receipt0' }, { binaryPropertyName: 'receipt1' }],
 				},
 			}),
 			binaryData: {
@@ -309,7 +348,10 @@ describe('createIncomingInvoice (integration)', () => {
 		const mock = createMockExecuteFunctions({
 			...baseOpts('JSON attachments', {
 				attachmentsMode: 'json',
-				attachmentsJson: JSON.stringify([{ binaryPropertyName: 'attach_0' }, { binaryPropertyName: 'attach_1' }]),
+				attachmentsJson: JSON.stringify([
+					{ binaryPropertyName: 'attach_0' },
+					{ binaryPropertyName: 'attach_1' },
+				]),
 			}),
 			binaryData: {
 				attach_0: makeBinaryEntry('sample-invoice.pdf', 'application/pdf'),
@@ -388,12 +430,16 @@ describe('createIncomingInvoice (integration)', () => {
 		const mock = createMockExecuteFunctions(baseOpts('output simplified'));
 		const result = await execute.call(mock, 0);
 		assertSuccess(result);
-		const invoice = (result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } })
-			.data?.ahf_CreateCompleteIncomingInvoice;
+		const payload = (
+			result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } }
+		).data?.ahf_CreateCompleteIncomingInvoice;
+		expect(payload).toBeDefined();
+		expect(payload).toHaveProperty('invoiceCreated');
+		const invoice = payload?.invoice as Record<string, unknown> | undefined;
 		expect(invoice).toBeDefined();
 		expect(invoice).toHaveProperty('code');
 		expect(invoice).toHaveProperty('rNummer');
-		// fields outside the simplified set are absent
+		// fields outside the simplified set are absent on invoice
 		expect(invoice).not.toHaveProperty('buchungen');
 		expect(invoice).not.toHaveProperty('notiz');
 	});
@@ -402,8 +448,11 @@ describe('createIncomingInvoice (integration)', () => {
 		const mock = createMockExecuteFunctions(baseOpts('output raw', { invoiceOutput: 'raw' }));
 		const result = await execute.call(mock, 0);
 		assertSuccess(result);
-		const invoice = (result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } })
-			.data?.ahf_CreateCompleteIncomingInvoice;
+		const payload = (
+			result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } }
+		).data?.ahf_CreateCompleteIncomingInvoice;
+		expect(payload).toBeDefined();
+		const invoice = payload?.invoice as Record<string, unknown> | undefined;
 		expect(invoice).toBeDefined();
 		// raw includes fields outside the simplified set
 		expect(invoice).toHaveProperty('buchungen');
@@ -419,9 +468,11 @@ describe('createIncomingInvoice (integration)', () => {
 		);
 		const result = await execute.call(mock, 0);
 		assertSuccess(result);
-		const invoice = (result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } })
-			.data?.ahf_CreateCompleteIncomingInvoice;
-		expect(invoice).toBeDefined();
-		expect(Object.keys(invoice ?? {})).toEqual(['code', 'rNummer']);
+		const payload = (
+			result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } }
+		).data?.ahf_CreateCompleteIncomingInvoice;
+		expect(payload).toBeDefined();
+		expect(payload).toHaveProperty('invoiceCreated');
+		expect(Object.keys(payload?.invoice ?? {})).toEqual(['code', 'rNummer']);
 	});
 });

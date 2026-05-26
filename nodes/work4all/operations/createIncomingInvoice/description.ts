@@ -10,7 +10,11 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		displayOptions: { show: { operation: ['createIncomingInvoice'] } },
 		options: [
 			{ name: 'Form Fields', value: 'form', description: 'Fill each field individually' },
-			{ name: 'JSON', value: 'json', description: 'Provide all invoice data as a single JSON object — ideal for LLM output' },
+			{
+				name: 'JSON',
+				value: 'json',
+				description: 'Provide all invoice data as a single JSON object — ideal for LLM output',
+			},
 		],
 		default: 'form',
 	},
@@ -21,8 +25,10 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		type: 'json',
 		default: '',
 		displayOptions: { show: { operation: ['createIncomingInvoice'], dataMode: ['json'] } },
-		description: 'Complete invoice data as a JSON object. All header fields and invoiceItems array in one. Field names match the form fields (camelCase).',
-		placeholder: '{\n  "supplierCode": 123,\n  "invoiceNumberSupplier": "INV-001",\n  "invoiceDate": "2026-01-15T00:00:00Z",\n  "invoiceItems": [{ "account": 4500, "netAmount": 100, "grossAmount": 119, "vatAmount": 19, "taxRate": 19 }]\n}',
+		description:
+			'Complete invoice data as a JSON object. All header fields and invoiceItems array in one. Field names match the form fields (camelCase).',
+		placeholder:
+			'{\n  "supplierCode": 123,\n  "invoiceNumberSupplier": "INV-001",\n  "invoiceDate": "2026-01-15T00:00:00Z",\n  "invoiceItems": [{ "account": 4500, "netAmount": 100, "grossAmount": 119, "vatAmount": 19, "taxRate": 19 }]\n}',
 	},
 	// ── Form mode ────────────────────────────────────────────────────────────────
 	{
@@ -38,22 +44,83 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 				displayName: 'Details',
 				values: [
 					// ── Supplier (server resolves in priority order: Code > CustomerNumber > Email > IBAN) ──
-					{ displayName: 'Supplier Code', name: 'supplierCode', type: 'number', default: 0, description: 'Internal work4all supplier code. Takes priority over all other supplier lookup fields.' },
-					{ displayName: 'Supplier Name', name: 'supplierName', type: 'string', default: '', description: 'Look up supplier by name. Match must be unique.' },
-					{ displayName: 'Customer Number at Supplier', name: 'supplierCustomerNumberAtSupplier', type: 'string', default: '', description: 'Your own customer number at this supplier. Match must be unique.' },
-					{ displayName: 'Supplier Contact Email', name: 'supplierContactMailAddress', type: 'string', default: '', description: 'Email address of the supplier or one of their contacts. Match must be unique.' },
-					{ displayName: 'Supplier IBAN', name: 'supplierIban', type: 'string', default: '', description: 'IBAN of the supplier. Match must be unique.' },
+					{
+						displayName: 'Supplier Code',
+						name: 'supplierCode',
+						type: 'number',
+						default: 0,
+						description:
+							'Internal work4all supplier code. Takes priority over all other supplier lookup fields.',
+					},
+					{
+						displayName: 'Supplier Name',
+						name: 'supplierName',
+						type: 'string',
+						default: '',
+						description: 'Look up supplier by name. Match must be unique.',
+					},
+					{
+						displayName: 'Customer Number at Supplier',
+						name: 'supplierCustomerNumberAtSupplier',
+						type: 'string',
+						default: '',
+						description: 'Your own customer number at this supplier. Match must be unique.',
+					},
+					{
+						displayName: 'Supplier Contact Email',
+						name: 'supplierContactMailAddress',
+						type: 'string',
+						default: '',
+						description:
+							'Email address of the supplier or one of their contacts. Match must be unique.',
+					},
+					{
+						displayName: 'Supplier IBAN',
+						name: 'supplierIban',
+						type: 'string',
+						default: '',
+						description: 'IBAN of the supplier. Match must be unique.',
+					},
 					// ── Project (server resolves in priority order: Code > Number > Name) ──────────────────
-					{ displayName: 'Project Code', name: 'projectCode', type: 'number', default: 0, description: 'Internal work4all project code. Takes priority over project number and name.' },
-					{ displayName: 'Project Number', name: 'projectNumber', type: 'string', default: '', description: 'Human-readable project number. Match must be unique.' },
-					{ displayName: 'Project Name', name: 'projectName', type: 'string', default: '', description: 'Project name. Match must be unique.' },
+					{
+						displayName: 'Project Code',
+						name: 'projectCode',
+						type: 'number',
+						default: 0,
+						description:
+							'Internal work4all project code. Takes priority over project number and name.',
+					},
+					{
+						displayName: 'Project Number',
+						name: 'projectNumber',
+						type: 'string',
+						default: '',
+						description: 'Human-readable project number. Match must be unique.',
+					},
+					{
+						displayName: 'Project Name',
+						name: 'projectName',
+						type: 'string',
+						default: '',
+						description: 'Project name. Match must be unique.',
+					},
 					// ── Invoice header ────────────────────────────────────────────────────────────────────
-					{ displayName: 'Supplier Invoice Number', name: 'invoiceNumberSupplier', type: 'string', default: '' },
+					{
+						displayName: 'Supplier Invoice Number',
+						name: 'invoiceNumberSupplier',
+						type: 'string',
+						default: '',
+					},
 					{ displayName: 'Note', name: 'note', type: 'string', default: '' },
 					{ displayName: 'Invoice Date', name: 'invoiceDate', type: 'dateTime', default: '' },
 					{ displayName: 'Entry Date', name: 'entryDate', type: 'dateTime', default: '' },
 					{ displayName: 'Receipt Date', name: 'receiptDate', type: 'dateTime', default: '' },
-					{ displayName: 'Payment Term (Days)', name: 'paymentTermDays', type: 'number', default: 0 },
+					{
+						displayName: 'Payment Term (Days)',
+						name: 'paymentTermDays',
+						type: 'number',
+						default: 0,
+					},
 					{ displayName: 'Skonto 1 Rate (%)', name: 'discount1Rate', type: 'number', default: 0 },
 					{ displayName: 'Skonto 1 Days', name: 'discount1Days', type: 'number', default: 0 },
 					{ displayName: 'Skonto 2 Rate (%)', name: 'discount2Rate', type: 'number', default: 0 },
@@ -131,7 +198,11 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		displayOptions: { show: { operation: ['createIncomingInvoice'] } },
 		options: [
 			{ name: 'Form Fields', value: 'form', description: 'Select binary properties manually' },
-			{ name: 'JSON', value: 'json', description: 'Provide attachment list as a JSON array — ideal for LLM output' },
+			{
+				name: 'JSON',
+				value: 'json',
+				description: 'Provide attachment list as a JSON array — ideal for LLM output',
+			},
 		],
 		default: 'form',
 	},
@@ -141,8 +212,10 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		type: 'json',
 		default: '',
 		displayOptions: { show: { operation: ['createIncomingInvoice'], attachmentsMode: ['json'] } },
-		description: 'Array of attachments as JSON. Each entry must have a binaryPropertyName that matches a binary property on the current item.',
-		placeholder: '[{ "binaryPropertyName": "attachment_0" }, { "binaryPropertyName": "attachment_2" }]',
+		description:
+			'Array of attachments as JSON. Each entry must have a binaryPropertyName that matches a binary property on the current item.',
+		placeholder:
+			'[{ "binaryPropertyName": "attachment_0" }, { "binaryPropertyName": "attachment_2" }]',
 	},
 	{
 		displayName: 'Attachments',
@@ -152,7 +225,8 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		placeholder: 'Add Attachment',
 		default: {},
 		displayOptions: { show: { operation: ['createIncomingInvoice'], attachmentsMode: ['form'] } },
-		description: 'Files to attach to the invoice. Each file must be available as binary data from a previous node (e.g. HTTP Request, Read Binary File).',
+		description:
+			'Files to attach to the invoice. Each file must be available as binary data from a previous node (e.g. HTTP Request, Read Binary File).',
 		options: [
 			{
 				name: 'files',
@@ -163,7 +237,8 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 						name: 'binaryPropertyName',
 						type: 'string',
 						default: 'data',
-						description: 'Name of the binary property in the current item that contains the file to upload',
+						description:
+							'Name of the binary property in the current item that contains the file to upload',
 					},
 				],
 			},
@@ -176,9 +251,21 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		name: 'invoiceOutput',
 		type: 'options',
 		options: [
-			{ name: 'Raw', value: 'raw', description: 'Return the full API response without any filtering' },
-			{ name: 'Selected Fields', value: 'selectedFields', description: 'Return only the fields specified below' },
-			{ name: 'Simplified', value: 'simplified', description: 'Return a reduced set of the most useful fields' },
+			{
+				name: 'Raw',
+				value: 'raw',
+				description: 'Return the full API response without any filtering',
+			},
+			{
+				name: 'Selected Fields',
+				value: 'selectedFields',
+				description: 'Return only the fields specified below',
+			},
+			{
+				name: 'Simplified',
+				value: 'simplified',
+				description: 'Return a reduced set of the most useful fields',
+			},
 		],
 		default: 'simplified',
 		displayOptions: { show: { operation: ['createIncomingInvoice'] } },
@@ -189,8 +276,11 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		name: 'invoiceOutputFields',
 		type: 'string',
 		default: '',
-		placeholder: 'e.g. ["code","rNummer","datum","rBetrag"]',
-		displayOptions: { show: { operation: ['createIncomingInvoice'], invoiceOutput: ['selectedFields'] } },
-		description: 'JSON array of field names to include in the response',
+		placeholder: 'e.g. ["code","rNummer","datum","lieferant"]',
+		displayOptions: {
+			show: { operation: ['createIncomingInvoice'], invoiceOutput: ['selectedFields'] },
+		},
+		description:
+			'JSON array of field names on the nested invoice object to include in the response (wrapper fields like invoiceCreated are always included)',
 	},
 ];
