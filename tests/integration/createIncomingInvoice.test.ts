@@ -88,7 +88,7 @@ function baseOpts(testName: string, extraParams: Record<string, unknown> = {}) {
 	return {
 		credentials: {
 			baseUrl: BASE_URL,
-			tokenUrl: TOKEN_URL,
+			accessTokenUrl: TOKEN_URL,
 			clientId: CLIENT_ID,
 			clientSecret: CLIENT_SECRET,
 		},
@@ -107,7 +107,7 @@ function baseOptsManual(testName: string, extraParams: Record<string, unknown> =
 	return {
 		credentials: {
 			baseUrl: BASE_URL,
-			tokenUrl: TOKEN_URL,
+			accessTokenUrl: TOKEN_URL,
 			clientId: CLIENT_ID,
 			clientSecret: CLIENT_SECRET,
 		},
@@ -193,7 +193,7 @@ describe('createIncomingInvoice (integration)', () => {
 		const mock = createMockExecuteFunctions({
 			credentials: {
 				baseUrl: BASE_URL,
-				tokenUrl: TOKEN_URL,
+				accessTokenUrl: TOKEN_URL,
 				clientId: CLIENT_ID,
 				clientSecret: CLIENT_SECRET,
 			},
@@ -236,7 +236,7 @@ describe('createIncomingInvoice (integration)', () => {
 		const mockNoAttach = createMockExecuteFunctions({
 			credentials: {
 				baseUrl: BASE_URL,
-				tokenUrl: TOKEN_URL,
+				accessTokenUrl: TOKEN_URL,
 				clientId: CLIENT_ID,
 				clientSecret: CLIENT_SECRET,
 			},
@@ -252,7 +252,7 @@ describe('createIncomingInvoice (integration)', () => {
 		const mockWithAttach = createMockExecuteFunctions({
 			credentials: {
 				baseUrl: BASE_URL,
-				tokenUrl: TOKEN_URL,
+				accessTokenUrl: TOKEN_URL,
 				clientId: CLIENT_ID,
 				clientSecret: CLIENT_SECRET,
 			},

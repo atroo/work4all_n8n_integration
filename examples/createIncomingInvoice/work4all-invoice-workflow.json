@@ -3,28 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "dataMode": "json",
-        "invoiceDataJson": "={{ $json.invoiceData }}",
-        "attachmentsMode": "json",
-        "attachmentsJson": "={{ ($json.relevantAttachmentKeys || []).map(k => ({ binaryPropertyName: k })) }}"
-      },
-      "type": "CUSTOM.work4all",
-      "typeVersion": 1,
-      "position": [
-        2256,
-        0
-      ],
-      "id": "08bc69bd-fc50-4259-91f1-4a20fe10d80f",
-      "name": "work4all",
-      "credentials": {
-        "work4allApi": {
-          "id": "GNx2r9nB6bBuknX0",
-          "name": "work4all account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -52,7 +30,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -656,
+        -448,
         224
       ],
       "id": "55e2f36e-b675-4295-9fc6-34324455ae73",
@@ -67,26 +45,26 @@
       "type": "@n8n/n8n-nodes-langchain.anthropic",
       "typeVersion": 1,
       "position": [
-        240,
+        656,
         0
       ],
       "id": "2414845b-1d00-4d40-b172-cde56f7cc03f",
       "name": "Upload a file",
       "credentials": {
         "anthropicApi": {
-          "id": "sYtc7j50JUIDoTBU",
+          "id": "WpdV4UJtw5oTuyXk",
           "name": "Anthropic account"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const out = [];\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const binary = item.binary || {};\n  const json = item.json || {};\n  for (const [key, file] of Object.entries(binary)) {\n    const mimeType = file.mimeType || \"\";\n    const fileName = file.fileName || \"\";\n    const isXml = mimeType === \"application/xml\" || mimeType === \"text/xml\" || fileName.toLowerCase().endsWith(\".xml\");\n    const isPdf = mimeType === \"application/pdf\" || fileName.toLowerCase().endsWith(\".pdf\");\n\n    if (isXml) {\n      const buffer = await this.helpers.getBinaryDataBuffer(i, key);\n      const xmlText = buffer.toString(\"utf8\");\n      out.push({\n        json: {\n          gmailMessageId: json.id,\n          originalSubject: json.subject,\n          attachmentKey: key,\n          fileName,\n          mimeType,\n          contentKind: \"xml_text\",\n          xmlText,\n        },\n      });\n    } else if (isPdf) {\n      out.push({\n        json: {\n          gmailMessageId: json.id,\n          originalSubject: json.subject,\n          attachmentKey: key,\n          fileName,\n          mimeType,\n          contentKind: \"upload_file\",\n        },\n        binary: { data: file },\n      });\n    } else {\n      out.push({\n        json: {\n          gmailMessageId: json.id,\n          originalSubject: json.subject,\n          attachmentKey: key,\n          fileName,\n          mimeType,\n          contentKind: \"unsupported\",\n        },\n      });\n    }\n  }\n}\nreturn out;"
+        "jsCode": "const out = [];\n\nconst items = $input.all();\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const binary = item.binary || {};\n  const json = item.json || {};\n  for (const [key, file] of Object.entries(binary)) {\n    const mimeType = file.mimeType || \"\";\n    const fileName = file.fileName || \"\";\n    const isXml = mimeType === \"application/xml\" || mimeType === \"text/xml\" || fileName.toLowerCase().endsWith(\".xml\");\n    const isPdf = mimeType === \"application/pdf\" || fileName.toLowerCase().endsWith(\".pdf\");\n\n    if (isXml) {\n      const buffer = await this.helpers.getBinaryDataBuffer(i, key);\n      const xmlText = buffer.toString(\"utf8\");\n      out.push({\n        json: {\n          gmailMessageId: json.id,\n          originalSubject: json.subject,\n          attachmentKey: key,\n          fileName,\n          mimeType,\n          contentKind: \"xml_text\",\n          xmlText,\n        },\n      });\n    } else if (isPdf) {\n      out.push({\n        json: {\n          gmailMessageId: json.id,\n          originalSubject: json.subject,\n          attachmentKey: key,\n          fileName,\n          mimeType,\n          contentKind: \"upload_file\",\n        },\n        binary: { data: file },\n      });\n    } else {\n      out.push({\n        json: {\n          gmailMessageId: json.id,\n          originalSubject: json.subject,\n          attachmentKey: key,\n          fileName,\n          mimeType,\n          contentKind: \"unsupported\",\n        },\n      });\n    }\n  }\n}\nreturn out;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -432,
+        -224,
         144
       ],
       "id": "e5216808-97c6-4655-8919-6b6f6d552a50",
@@ -99,7 +77,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1136,
+        1552,
         80
       ],
       "id": "69f65815-32cb-46a1-af05-ebadcbfaa58e",
@@ -132,14 +110,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1360,
+        1776,
         80
       ],
       "id": "c88e71e8-2d2a-472d-bd3d-98756767a532",
       "name": "LLM Filter Relevant Attachments",
       "credentials": {
         "anthropicApi": {
-          "id": "sYtc7j50JUIDoTBU",
+          "id": "WpdV4UJtw5oTuyXk",
           "name": "Anthropic account"
         }
       }
@@ -151,7 +129,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        464,
+        880,
         0
       ],
       "id": "adfc492c-801f-460b-918a-46b1a57da011",
@@ -162,7 +140,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        688,
+        1104,
         80
       ],
       "id": "d16bdc2a-d1f8-4397-83e5-3832ce9c04b4",
@@ -175,7 +153,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        912,
+        1328,
         80
       ],
       "id": "6d8bc3cc-5d48-41d5-ac0f-4e4bdec77873",
@@ -209,7 +187,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1808,
+        2224,
         80
       ],
       "id": "57c5baee-d67f-4575-a7f3-a8e9a2292ff7",
@@ -222,7 +200,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1584,
+        2000,
         80
       ],
       "id": "a88f5116-4c42-4071-b94f-72417efa60a9",
@@ -235,7 +213,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2032,
+        2448,
         0
       ],
       "id": "bcc3c178-b88e-4233-bf29-b9902414844f",
@@ -246,24 +224,11 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        2480,
+        3104,
         224
       ],
       "id": "357e0dc2-c2f5-499b-a145-a1a969002716",
       "name": "No Operation, do nothing"
-    },
-    {
-      "parameters": {
-        "inputSource": "passthrough"
-      },
-      "id": "1fea91ae-224d-4f20-a2fa-0eb3bad74751",
-      "typeVersion": 1.1,
-      "name": "Start",
-      "type": "n8n-nodes-base.executeWorkflowTrigger",
-      "position": [
-        -880,
-        224
-      ]
     },
     {
       "parameters": {
@@ -293,7 +258,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -208,
+        0,
         144
       ],
       "id": "d842545a-3a1a-48d3-a5ec-6840b5c5d2ee",
@@ -327,11 +292,85 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        16,
+        224,
         80
       ],
       "id": "9a20aa03-a543-43d0-b9d6-942f681b9197",
       "name": "PDF?"
+    },
+    {
+      "parameters": {
+        "dataMode": "json",
+        "invoiceDataJson": "={{ $json.invoiceData }}",
+        "attachmentsMode": "json",
+        "attachmentsJson": "={{ $binary }}"
+      },
+      "type": "n8n-nodes-work4all.work4all",
+      "typeVersion": 1,
+      "position": [
+        2656,
+        0
+      ],
+      "id": "9ef4851d-3113-4a63-8c6c-8172cab0ad6b",
+      "name": "Work4all",
+      "credentials": {
+        "work4allApi": {
+          "id": "cdzskDTGMQLmP36D",
+          "name": "Work4all account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nfor (const item of items) {\n  item.binary.data.mimeType = 'application/pdf';\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        80
+      ],
+      "id": "a6ad6079-9074-47e4-95e8-52c7a0a2081a",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    messageId: $('Start').item.json.id,\n    errors: $input.first().json.errors\n  }}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2864,
+        0
+      ],
+      "id": "c386d5a1-0964-4a3c-b6e5-513ad6b116c2",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    outlookMessageId: $('Start').item.json.id,\n    success: true  // or false depending on branch\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3312,
+        224
+      ],
+      "id": "b78a6c70-ace3-48a8-98c4-71a938ec767f",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -912,
+        304
+      ],
+      "id": "79fb53c5-4088-4567-8fda-0f8aba049b96",
+      "name": "Start"
     }
   ],
   "pinData": {},
@@ -460,33 +499,11 @@
         ]
       ]
     },
-    "work4all": {
-      "main": [
-        [
-          {
-            "node": "No Operation, do nothing",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Code in JavaScript": {
       "main": [
         [
           {
-            "node": "work4all",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Start": {
-      "main": [
-        [
-          {
-            "node": "check for attachments",
+            "node": "Work4all",
             "type": "main",
             "index": 0
           }
@@ -515,7 +532,7 @@
       "main": [
         [
           {
-            "node": "Upload a file",
+            "node": "Code in JavaScript1",
             "type": "main",
             "index": 0
           }
@@ -528,18 +545,62 @@
           }
         ]
       ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Work4all": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "check for attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": false
+    "binaryMode": "separate"
   },
-  "versionId": "546fd2df-2607-41ed-a120-62834ed6eb04",
+  "versionId": "24b7293a-97f0-4fef-8612-ed93d4ecffac",
   "meta": {
-    "instanceId": "8f9ec9901e41a08bb2ba8c686bff4a1d25646ff7f206d842b1aa2b96fc47b5f3"
+    "templateCredsSetupCompleted": true,
+    "instanceId": "296be6635839d6898d9738c77c7973f94245430cfacaa9ab6123dfbd23a17154"
   },
-  "id": "0aotulZHh0GFCjSV",
+  "id": "pJ8yNsaBKgLj6THO",
   "tags": []
 }

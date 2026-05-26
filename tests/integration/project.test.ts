@@ -36,7 +36,7 @@ const testWithProject = hasProjectCode ? it : it.skip;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const credentials = { baseUrl: BASE_URL, tokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET };
+const credentials = { baseUrl: BASE_URL, accessTokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET };
 
 function ctx(operation: string, extra: Record<string, unknown> = {}) {
 	return createMockExecuteFunctions({

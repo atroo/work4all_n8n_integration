@@ -18,7 +18,7 @@ export class Work4all implements INodeType {
 		defaults: { name: 'Work4all' },
 		inputs: ['main'],
 		outputs: ['main'],
-		credentials: [{ name: 'work4allApi', required: true }],
+		credentials: [{ name: 'work4allOAuth2Api', required: true }],
 		properties: [
 			{
 				displayName: 'Operation',
