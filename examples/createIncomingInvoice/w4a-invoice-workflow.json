@@ -1,0 +1,443 @@
+{
+  "name": "work4all-invoice-workflow - Laurin",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7ea39fb4-a88f-4f20-85d2-6daea27f1c16",
+              "leftValue": "={{ Object.keys($binary ?? {}).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -448,
+        224
+      ],
+      "id": "4494437a-6a78-4d22-a142-2422295cef45",
+      "name": "check for attachments"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6573bc49-61be-476e-95d7-3f9b4e26b1c9",
+              "leftValue": "={{ $json.found_invoice }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1840,
+        160
+      ],
+      "id": "44813c13-bab8-4962-91e2-3d8ce868c355",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "function removeNullish(value) {\n  if (Array.isArray(value)) {\n    return value.map(removeNullish);\n  }\n\n  if (value && typeof value === \"object\") {\n    return Object.fromEntries(\n      Object.entries(value)\n        .filter(([, v]) => v !== undefined && v !== null && v !== \"\")\n        .map(([k, v]) => [k, removeNullish(v)])\n    );\n  }\n\n  return value;\n}\n\nlet raw =$input.first().json.choices[0].message.content ?? \"{}\";\n\n// remove accidental code fences if Claude still adds them\nraw = raw\n  .replace(/^```json\\s*/i, \"\")\n  .replace(/^```\\s*/i, \"\")\n  .replace(/\\s*```$/, \"\")\n  .trim();\n\nconst parsed = JSON.parse(raw);\n\nreturn [{\n  json: {\n    found_invoice: parsed.found_invoice === true,\n    reason: parsed.reason ?? \"\",\n    relevantAttachmentKeys: parsed.relevantAttachmentKeys ?? [],\n    invoiceData: removeNullish(parsed.invoiceData ?? {}),\n  },\n  binary: $input.item.binary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        128
+      ],
+      "id": "9baa57d1-3a00-48c6-acfb-b3b6f364ee97",
+      "name": "parse json data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const relevantKeys = $json.relevantAttachmentKeys || [];\nconst sourceBinary = $('Start').item.binary || {};\n\nconst keptBinary = Object.fromEntries(\n  relevantKeys\n    .filter((key) => sourceBinary[key])\n    .map((key) => [key, sourceBinary[key]])\n);\n\nconst invoiceData = { ...($json.invoiceData || {}) };\ninvoiceData.currencyCode = 208324612;\n\nfor (const key of [\"invoiceDate\", \"entryDate\", \"receiptDate\"]) {\n  if (\n    typeof invoiceData[key] === \"string\" &&\n    /^\\d{4}-\\d{2}-\\d{2}$/.test(invoiceData[key])\n  ) {\n    invoiceData[key] = `${invoiceData[key]}T00:00:00Z`;\n  }\n}\n\nreturn [{\n  json: {\n    ...$json,\n    invoiceData,\n    relevantAttachmentKeys: relevantKeys,\n  },\n  binary: keptBinary,\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2304,
+        64
+      ],
+      "id": "14caf6bb-1d2f-4d9c-be32-c80338c5c1f0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3024,
+        352
+      ],
+      "id": "ac4f091a-8a67-4ab2-82af-f6b2e69eba24",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a5d662cb-f633-4648-bc88-bcc9362b9630",
+              "leftValue": "={{ $json.has_xml_or_json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        304,
+        160
+      ],
+      "id": "b17b0fb3-9443-4e96-b1ad-6b1adbaddc39",
+      "name": "XML or PDF?"
+    },
+    {
+      "parameters": {
+        "dataMode": "json",
+        "invoiceDataJson": "={{ $json.invoiceData }}",
+        "attachmentsMode": "json",
+        "attachmentsJson": "={{ ($json.relevantAttachmentKeys || []).map(k => ({ binaryPropertyName: k })) }}"
+      },
+      "type": "n8n-nodes-work4all.work4all",
+      "typeVersion": 1,
+      "position": [
+        3024,
+        0
+      ],
+      "id": "4b1b2b89-e0d6-4a31-a704-e0888e0e65ff",
+      "name": "Work4all",
+      "credentials": {
+        "work4allApi": {
+          "id": "cdzskDTGMQLmP36D",
+          "name": "Work4all Test - LB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    outlookMessageId: $('Start').item.json.id,\n    success: true \n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3232,
+        352
+      ],
+      "id": "fd19f28c-5fe2-4c09-8122-8b79962bbe6b",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    messageId: $('Start').item.json.id,\n    errors: $input.first().json.errors\n  }}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3376,
+        0
+      ],
+      "id": "7d6140b1-ff14-4792-b834-f952a3dc0017",
+      "name": "Parse Output"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item;\n\nlet content = [\n  {\n    type: \"text\",\n    text: `\nReturn ONLY valid JSON.\nDo not use markdown.\nDo not wrap in triple backticks.\nDo not add explanations before or after the JSON.\n\nUse exactly this shape:\n{\n  \"found_invoice\": true,\n  \"reason\": \"short explanation\",\n  \"relevantAttachmentKeys\": [\"attachment_0\"],\n  \"invoiceData\": {\n    \"supplierCode\": null,\n    \"supplierName\": null,\n    \"supplierCustomerNumberAtSupplier\": null,\n    \"supplierContactMailAddress\": null,\n    \"supplierIban\": null,\n    \"projectCode\": null,\n    \"projectNumber\": null,\n    \"projectName\": null,\n    \"invoiceNumberSupplier\": null,\n    \"note\": null, # a short description, e.g. the supplier company name combined with the invoice period\n    \"invoiceDate\": null,\n    \"entryDate\": null,\n    \"receiptDate\": null,\n    \"paymentTermDays\": null,\n    \"discount1Rate\": null,\n    \"discount1Days\": null,\n    \"discount2Rate\": null,\n    \"discount2Days\": null,\n    \"currencyCode\": null,\n    \"invoiceItems\": [\n      {\n        \"account\": null,\n        \"costCenter\": null,\n        \"costGroup\": null,\n        \"projectCode\": null,\n        \"taxCode\": null,\n        \"taxRate\": null,\n        \"netAmount\": null,\n        \"grossAmount\": null,\n        \"vatAmount\": null,\n        \"note\": null # short note, not more than 50 chars\n      }\n    ]\n  }\n}\n\nRules:\n- found_invoice = true only if at least one attachment is clearly an incoming supplier invoice / Eingangsrechnung / XRechnung / receipt relevant for accounting.\n- relevantAttachmentKeys must contain the original attachment keys like \"attachment_0\".\n- invoiceData field names must match exactly.\n- Dates must be ISO-8601 strings if known, otherwise null.\n- Do not invent values.\n- Aggregate invoiceItems by VAT rate (Mehrwertsteuersatz), not by raw line item.\n- Return one invoiceItems entry per VAT bucket.\n- Sum netAmount, vatAmount and grossAmount per VAT bucket.\n- Only fill account, costCenter, costGroup, projectCode, taxCode if explicitly present in the documents.\n- If no invoice is found, return:\n  {\n    \"found_invoice\": false,\n    \"reason\": \"...\",\n    \"relevantAttachmentKeys\": [],\n    \"invoiceData\": {\n      \"supplierCode\": null,\n      \"supplierName\": null,\n      \"supplierCustomerNumberAtSupplier\": null,\n      \"supplierContactMailAddress\": null,\n      \"supplierIban\": null,\n      \"projectCode\": null,\n      \"projectNumber\": null,\n      \"projectName\": null,\n      \"invoiceNumberSupplier\": null,\n      \"note\": null,\n      \"invoiceDate\": null,\n      \"entryDate\": null,\n      \"receiptDate\": null,\n      \"paymentTermDays\": null,\n      \"discount1Rate\": null,\n      \"discount1Days\": null,\n      \"discount2Rate\": null,\n      \"discount2Days\": null,\n      \"currencyCode\": null,\n      \"invoiceItems\": []\n    }\n  }\n`\n  }\n];\n\nlet has_xml_or_json = false;\n\nif (item.binary) {\n  for (const key of Object.keys(item.binary)) {\n    const file = item.binary[key];\n\n    const mimeType = file.mimeType || \"\";\n    const fileName = file.fileName || \"file\";\n\n    // ✅ FIX: use itemIndex (0 because \"each item\" mode)\n    const buffer = await this.helpers.getBinaryDataBuffer(0, key);\n    const base64 = buffer.toString(\"base64\");\n\n    const isPdf =\n      mimeType.includes(\"pdf\") ||\n      fileName.toLowerCase().endsWith(\".pdf\");\n\n    if (isPdf) {\n      has_xml_or_json = true;\n      content.push({\n        type: \"input_file\",\n        filename: fileName,\n        file_data: `data:application/pdf;base64,${base64}`\n      });\n    } else if (\n      mimeType.includes(\"xml\") ||\n      mimeType.includes(\"json\") ||\n      fileName.endsWith(\".xml\") ||\n      fileName.endsWith(\".json\")\n    ) {\n      has_xml_or_json = true;\n      const text = buffer.toString(\"utf-8\");\n\n      content.push({\n        type: \"text\",\n        text: `Content of ${fileName}:\\n${text}`\n      });\n    }\n  }\n}\n\nreturn {\n  json: {\n    has_xml_or_json: has_xml_or_json,\n    model: \"policy/EU-Sonnet-4-6\",\n    messages: [\n      {\n        role: \"user\",\n        content\n      }\n    ]\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        112
+      ],
+      "id": "9e1376be-9549-41f9-9002-97abce57271e",
+      "name": "Build LLM Messages"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://router.eu.requesty.ai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        608,
+        112
+      ],
+      "id": "1b670fd7-78d8-49e1-a5b0-ef5739314beb",
+      "name": "HTTP Request",
+      "credentials": {
+        "openAiApi": {
+          "id": "5dfLLN8AkAuEQRh9",
+          "name": "Requesty OpenAI Compatible Endpoint"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -928,
+        112
+      ],
+      "id": "c85d5e41-6203-45fe-bdf5-43ee9a316379",
+      "name": "Start"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": {
+          "__rl": true,
+          "value": "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwBGAAAAAAB0sAUOHy4fSK8zXAyosp7vBwD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdLAAD5F53ZtU8FQ5T0NXXlFAlwAAAfty1VAAA=",
+          "mode": "list",
+          "cachedResultName": "teamviewer-invoice",
+          "cachedResultUrl": "https://outlook.office365.com/owa/?ItemID=AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwBGAAAAAAB0sAUOHy4fSK8zXAyosp7vBwD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdLAAD5F53ZtU8FQ5T0NXXlFAlwAAAfty1VAAA%3D&exvsurl=1&viewmodel=ReadMessageItem"
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        -1152,
+        352
+      ],
+      "id": "38aa133c-f913-4d30-9196-6102ea6cbf3b",
+      "name": "Start1",
+      "webhookId": "7e37b796-f657-4a5e-90b5-8c67c0844569",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "iZNGowBVWVT0AWBr",
+          "name": "invoice@work4alltest.de - LB"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "check for attachments": {
+      "main": [
+        [
+          {
+            "node": "Build LLM Messages",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse json data": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Work4all",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "XML or PDF?": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Work4all": {
+      "main": [
+        [
+          {
+            "node": "Parse Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build LLM Messages": {
+      "main": [
+        [
+          {
+            "node": "XML or PDF?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "parse json data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "check for attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "26aafd07-2aa3-49d1-b8bb-f51ebfc03fd7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "296be6635839d6898d9738c77c7973f94245430cfacaa9ab6123dfbd23a17154"
+  },
+  "id": "ecAMgohZk1o8g8im",
+  "tags": [
+    {
+      "updatedAt": "2026-04-29T06:51:16.477Z",
+      "createdAt": "2026-04-29T06:51:16.477Z",
+      "id": "DLPU6J5imgWz56va",
+      "name": "prod"
+    }
+  ]
+}
