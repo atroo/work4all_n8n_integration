@@ -286,7 +286,7 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 				name: 'Simplified',
 				value: 'simplified',
 				description:
-					'Return top-level status fields plus a reduced set of invoice fields (code, rNummer, rNummerbeiLieferant, datum, lieferant)',
+					'Return top-level status fields plus a reduced set of invoice fields (code, rNummer, rNummerbeiLieferant, datum, rBetrag, summe, waehrungCode, paymentTermDays, statusCode, lieferant)',
 			},
 		],
 		default: 'simplified',
@@ -300,7 +300,7 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 		type: 'string',
 		default: '',
 		placeholder:
-			'e.g. ["code","rNummer","rNummerbeiLieferant","datum","lieferant"]',
+			'e.g. ["code","rNummer","rNummerbeiLieferant","datum","rBetrag","summe","waehrungCode","paymentTermDays","statusCode","lieferant"]',
 		displayOptions: {
 			show: { operation: ['createIncomingInvoice'], invoiceOutput: ['selectedFields'] },
 		},

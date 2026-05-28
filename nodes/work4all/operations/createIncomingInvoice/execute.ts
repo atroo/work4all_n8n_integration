@@ -23,18 +23,31 @@ const GQL_MUTATION = `
 				faelligDatum
 				eingangsDatum
 				buchungsDatum
+				rBetrag
+				rMwst
+				summe
+				waehrungCode
+				paymentTermDays
+				skontoProzent
+				skontoTg
+				statusCode
+				creationDate
+				sDObjMemberCode
+				projektCode
 				buchungen {
-					kostengruppeCode
-					kostenstelleCode
-					kostenstelleNummer
-					anteilDM
-					mwst
-					mwstBetrag
-					notiz
-					projektCode
+					code
 					sachkontoCode
 					sachkontoNummer
+					kostenstelleCode
+					kostenstelleNummer
+					kostengruppeCode
+					projektCode
 					steuerschluessel
+					mwst
+					valueNet
+					mwstBetrag
+					anteilDM
+					notiz
 				}
 				lieferant { code nummer name }
 				projekt { code nummer name }
@@ -52,7 +65,18 @@ const WRAPPER_FIELDS = [
 	'errorMessage',
 ];
 
-const SIMPLIFIED_INVOICE_FIELDS = ['code', 'rNummer', 'rNummerbeiLieferant', 'datum', 'lieferant'];
+const SIMPLIFIED_INVOICE_FIELDS = [
+	'code',
+	'rNummer',
+	'rNummerbeiLieferant',
+	'datum',
+	'rBetrag',
+	'summe',
+	'waehrungCode',
+	'paymentTermDays',
+	'statusCode',
+	'lieferant',
+];
 
 type MutationPayload = Record<string, unknown> & {
 	invoice?: Record<string, unknown>;
