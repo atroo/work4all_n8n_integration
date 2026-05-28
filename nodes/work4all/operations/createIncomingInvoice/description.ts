@@ -266,6 +266,7 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 	},
 
 	// ── Output ────────────────────────────────────────────────────────────────
+	// Response shape: top-level mutation fields (always included when filtered) plus nested invoice.
 	{
 		displayName: 'Output',
 		name: 'invoiceOutput',
@@ -274,33 +275,36 @@ export const createIncomingInvoiceDescription: INodeProperties[] = [
 			{
 				name: 'Raw',
 				value: 'raw',
-				description: 'Return the full API response without any filtering',
+				description: 'Return the full GraphQL response without filtering',
 			},
 			{
 				name: 'Selected Fields',
 				value: 'selectedFields',
-				description: 'Return only the fields specified below',
+				description: 'Return top-level status fields plus only the invoice sub-fields listed below',
 			},
 			{
 				name: 'Simplified',
 				value: 'simplified',
-				description: 'Return a reduced set of the most useful fields',
+				description:
+					'Return top-level status fields plus a reduced set of invoice fields (code, rNummer, rNummerbeiLieferant, datum, lieferant)',
 			},
 		],
 		default: 'simplified',
 		displayOptions: { show: { operation: ['createIncomingInvoice'] } },
-		description: 'How to filter the response fields',
+		description:
+			'How to filter the mutation result. Unless Raw is selected, the response always includes top-level fields: newSupplierCreated, newSupplierCode, accountSet, taxKeytSet, invoiceCreated, errorMessage, and a nested invoice object whose fields are filtered per mode.',
 	},
 	{
 		displayName: 'Fields',
 		name: 'invoiceOutputFields',
 		type: 'string',
 		default: '',
-		placeholder: 'e.g. ["code","rNummer","datum","lieferant"]',
+		placeholder:
+			'e.g. ["code","rNummer","rNummerbeiLieferant","datum","lieferant"]',
 		displayOptions: {
 			show: { operation: ['createIncomingInvoice'], invoiceOutput: ['selectedFields'] },
 		},
 		description:
-			'JSON array of field names on the nested invoice object to include in the response (wrapper fields like invoiceCreated are always included)',
+			'JSON array of field names on the nested invoice object. Top-level fields (newSupplierCreated, newSupplierCode, accountSet, taxKeytSet, invoiceCreated, errorMessage) are always included and cannot be selected here.',
 	},
 ];

@@ -9,6 +9,8 @@
  *   W4A_API_CLIENT_SECRET        OAuth2 client secret
  *   W4A_TEST_SUPPLIER_CODE       Internal supplier code (number) — must exist in your tenant
  *   W4A_TEST_ACCOUNT_CODE        Sachkonto code for the invoice line item
+ *   W4A_TEST_SUPPLIER_AUTO_CREATE  Set to "1" to run the new-supplier auto-create test (requires
+ *                                  backend support for creating a Lieferant when lookup misses)
  *
  * All tests are skipped automatically when the env vars are not set.
  */
@@ -37,9 +39,12 @@ const hasCredentials = Boolean(
 	BASE_URL && TOKEN_URL && CLIENT_ID && CLIENT_SECRET && SUPPLIER_CODE && ACCOUNT_CODE,
 );
 
+const hasSupplierAutoCreate = process.env['W4A_TEST_SUPPLIER_AUTO_CREATE'] === '1';
+
 // Use `it` when credentials are present, `it.skip` otherwise — tests will appear
 // as "skipped" in the report rather than failing the suite in CI without credentials.
 const test = hasCredentials ? it : it.skip;
+const testSupplierAutoCreate = hasCredentials && hasSupplierAutoCreate ? it : it.skip;
 
 // ── Test fixtures ─────────────────────────────────────────────────────────────
 
@@ -138,8 +143,14 @@ interface GqlResponse {
 	data?: {
 		ahf_CreateCompleteIncomingInvoice?: {
 			invoiceCreated?: boolean;
+			newSupplierCreated?: boolean;
+			newSupplierCode?: number;
 			errorMessage?: string;
-			invoice?: { code: number; rNummer?: string };
+			invoice?: {
+				code: number;
+				rNummer?: string;
+				lieferant?: { code: number; name?: string };
+			};
 		};
 	};
 	errors?: Array<{ message: string }>;
@@ -153,6 +164,28 @@ function assertSuccess(result: unknown): void {
 	const payload = res.data?.ahf_CreateCompleteIncomingInvoice;
 	expect(payload?.invoiceCreated).toBe(true);
 	expect(payload?.invoice?.code).toBeGreaterThan(0);
+}
+
+/** Unique supplier lookup fields so the API cannot match an existing Lieferant. */
+function uniqueSupplierIdentity() {
+	const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+	return {
+		supplierName: `n8n IT New Supplier ${id} GmbH`,
+		supplierContactMailAddress: `billing+${id}@n8n-integration.invalid`,
+	};
+}
+
+function getMutationPayload(result: unknown) {
+	return (result as GqlResponse).data?.ahf_CreateCompleteIncomingInvoice;
+}
+
+function assertNewSupplierCreated(result: unknown): NonNullable<ReturnType<typeof getMutationPayload>> {
+	assertSuccess(result);
+	const payload = getMutationPayload(result);
+	expect(payload?.newSupplierCreated).toBe(true);
+	expect(payload?.newSupplierCode).toBeGreaterThan(0);
+	expect(payload?.invoice?.lieferant?.code).toBe(payload?.newSupplierCode);
+	return payload!;
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -209,6 +242,78 @@ describe('createIncomingInvoice (integration)', () => {
 		});
 		const result = await execute.call(mock, 0);
 		assertSuccess(result);
+	});
+
+	testSupplierAutoCreate('creates a new supplier when lookup finds no existing supplier', async () => {
+		const supplier = uniqueSupplierIdentity();
+		const today = new Date().toISOString();
+		const invoiceItems = [
+			{
+				account: ACCOUNT_CODE,
+				taxRate: 19,
+				netAmount: 10.0,
+				grossAmount: 11.9,
+				vatAmount: 1.9,
+				note: 'n8n integration test — new supplier',
+			},
+		];
+
+		const credentials = {
+			baseUrl: BASE_URL,
+			accessTokenUrl: TOKEN_URL,
+			clientId: CLIENT_ID,
+			clientSecret: CLIENT_SECRET,
+		};
+
+		const firstInvoice = {
+			...supplier,
+			invoiceNumberSupplier: `IT-NEW-SUP-1-${Date.now()}`,
+			note: '[n8n test] auto-create supplier (first invoice)',
+			invoiceDate: today,
+			entryDate: today,
+			currency: 'EUR',
+			invoiceItems,
+		};
+
+		const firstResult = await execute.call(
+			createMockExecuteFunctions({
+				credentials,
+				parameters: {
+					dataMode: 'json',
+					invoiceDataJson: JSON.stringify(firstInvoice),
+					attachmentsUi: {},
+				},
+			}),
+			0,
+		);
+		const firstPayload = assertNewSupplierCreated(firstResult);
+
+		// Same supplier identity — should match the Lieferant created above, not create another.
+		const secondInvoice = {
+			...supplier,
+			invoiceNumberSupplier: `IT-NEW-SUP-2-${Date.now()}`,
+			note: '[n8n test] auto-create supplier (second invoice)',
+			invoiceDate: today,
+			entryDate: today,
+			currency: 'EUR',
+			invoiceItems,
+		};
+
+		const secondResult = await execute.call(
+			createMockExecuteFunctions({
+				credentials,
+				parameters: {
+					dataMode: 'json',
+					invoiceDataJson: JSON.stringify(secondInvoice),
+					attachmentsUi: {},
+				},
+			}),
+			0,
+		);
+		assertSuccess(secondResult);
+		const secondPayload = getMutationPayload(secondResult);
+		expect(secondPayload?.newSupplierCreated).toBe(false);
+		expect(secondPayload?.invoice?.lieferant?.code).toBe(firstPayload.newSupplierCode);
 	});
 
 	test('creates invoice via top-level JSON mode (LLM output path)', async () => {
