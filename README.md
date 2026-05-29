@@ -24,6 +24,32 @@ You will need:
 
 Contact your work4all administrator to obtain client credentials with the required permissions.
 
+## Development
+
+### Dev Container (recommended)
+
+This repo includes a [Dev Container](https://containers.dev/) configuration under `.devcontainer/`.
+
+1. Install the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension in VS Code or Cursor.
+2. **Dev Containers: Reopen in Container** from the command palette.
+3. After the container builds, run:
+
+```bash
+npm run dev          # local n8n with this node — http://localhost:5678
+npm test             # integration tests (requires .env.test)
+npm run build:watch  # rebuild on TypeScript changes
+```
+
+Copy `.env.test.example` to `.env.test` inside the container for integration tests against a real work4all tenant. The workspace folder is mounted into the container, so your local `.env.test` is available after you create it on the host.
+
+### Local (without container)
+
+```bash
+npm ci
+npm run build
+npm run dev
+```
+
 ## Installation
 
 ### In n8n (recommended)

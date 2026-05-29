@@ -1,0 +1,33 @@
+{
+	"name": "work4all n8n integration",
+	"image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+	"features": {
+		"ghcr.io/devcontainers/features/git:1": {}
+	},
+	"mounts": [
+		"source=work4all-n8n-dev,target=/home/node/.n8n-node-cli,type=volume"
+	],
+	"forwardPorts": [5678],
+	"portsAttributes": {
+		"5678": {
+			"label": "n8n (npm run dev)",
+			"onAutoForward": "notify"
+		}
+	},
+	"postCreateCommand": "sudo chown -R node:node /home/node/.n8n-node-cli 2>/dev/null || true && npm ci && npm run build",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
+				"EditorConfig.EditorConfig"
+			],
+			"settings": {
+				"editor.formatOnSave": true,
+				"editor.defaultFormatter": "esbenp.prettier-vscode",
+				"eslint.useFlatConfig": true
+			}
+		}
+	},
+	"remoteUser": "node"
+}

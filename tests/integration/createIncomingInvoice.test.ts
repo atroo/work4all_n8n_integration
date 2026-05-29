@@ -9,6 +9,8 @@
  *   W4A_API_CLIENT_SECRET        OAuth2 client secret
  *   W4A_TEST_SUPPLIER_CODE       Internal supplier code (number) — must exist in your tenant
  *   W4A_TEST_ACCOUNT_CODE        Sachkonto code for the invoice line item
+ *   W4A_TEST_SUPPLIER_AUTO_CREATE  Set to "1" to run the new-supplier auto-create test (requires
+ *                                  backend support for creating a Lieferant when lookup misses)
  *
  * All tests are skipped automatically when the env vars are not set.
  */
@@ -33,11 +35,16 @@ const CLIENT_SECRET = process.env['W4A_API_CLIENT_SECRET'] ?? '';
 const SUPPLIER_CODE = parseInt(process.env['W4A_TEST_SUPPLIER_CODE'] ?? '0', 10);
 const ACCOUNT_CODE = parseInt(process.env['W4A_TEST_ACCOUNT_CODE'] ?? '0', 10);
 
-const hasCredentials = Boolean(BASE_URL && TOKEN_URL && CLIENT_ID && CLIENT_SECRET && SUPPLIER_CODE && ACCOUNT_CODE);
+const hasCredentials = Boolean(
+	BASE_URL && TOKEN_URL && CLIENT_ID && CLIENT_SECRET && SUPPLIER_CODE && ACCOUNT_CODE,
+);
+
+const hasSupplierAutoCreate = process.env['W4A_TEST_SUPPLIER_AUTO_CREATE'] === '1';
 
 // Use `it` when credentials are present, `it.skip` otherwise — tests will appear
 // as "skipped" in the report rather than failing the suite in CI without credentials.
 const test = hasCredentials ? it : it.skip;
+const testSupplierAutoCreate = hasCredentials && hasSupplierAutoCreate ? it : it.skip;
 
 // ── Test fixtures ─────────────────────────────────────────────────────────────
 
@@ -84,7 +91,12 @@ function baseItems() {
 /** Base mock options using JSON input mode (no attachments) */
 function baseOpts(testName: string, extraParams: Record<string, unknown> = {}) {
 	return {
-		credentials: { baseUrl: BASE_URL, accessTokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+		credentials: {
+			baseUrl: BASE_URL,
+			accessTokenUrl: TOKEN_URL,
+			clientId: CLIENT_ID,
+			clientSecret: CLIENT_SECRET,
+		},
 		parameters: {
 			'dataFields.details': baseDetails(testName),
 			inputMode: 'json',
@@ -98,7 +110,12 @@ function baseOpts(testName: string, extraParams: Record<string, unknown> = {}) {
 /** Base mock options using manual mapping input mode */
 function baseOptsManual(testName: string, extraParams: Record<string, unknown> = {}) {
 	return {
-		credentials: { baseUrl: BASE_URL, accessTokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+		credentials: {
+			baseUrl: BASE_URL,
+			accessTokenUrl: TOKEN_URL,
+			clientId: CLIENT_ID,
+			clientSecret: CLIENT_SECRET,
+		},
 		parameters: {
 			'dataFields.details': baseDetails(testName),
 			inputMode: 'manual',
@@ -123,7 +140,19 @@ function baseOptsManual(testName: string, extraParams: Record<string, unknown> =
 // ── Helper: assert a successful GraphQL response ──────────────────────────────
 
 interface GqlResponse {
-	data?: { ahf_CreateCompleteIncomingInvoice?: { code: number; rNummer?: string } };
+	data?: {
+		ahf_CreateCompleteIncomingInvoice?: {
+			invoiceCreated?: boolean;
+			newSupplierCreated?: boolean;
+			newSupplierCode?: number;
+			errorMessage?: string;
+			invoice?: {
+				code: number;
+				rNummer?: string;
+				lieferant?: { code: number; name?: string };
+			};
+		};
+	};
 	errors?: Array<{ message: string }>;
 }
 
@@ -132,7 +161,31 @@ function assertSuccess(result: unknown): void {
 	if (res.errors?.length) {
 		throw new Error(`GraphQL errors: ${res.errors.map((e) => e.message).join(', ')}`);
 	}
-	expect(res.data?.ahf_CreateCompleteIncomingInvoice?.code).toBeGreaterThan(0);
+	const payload = res.data?.ahf_CreateCompleteIncomingInvoice;
+	expect(payload?.invoiceCreated).toBe(true);
+	expect(payload?.invoice?.code).toBeGreaterThan(0);
+}
+
+/** Unique supplier lookup fields so the API cannot match an existing Lieferant. */
+function uniqueSupplierIdentity() {
+	const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+	return {
+		supplierName: `n8n IT New Supplier ${id} GmbH`,
+		supplierContactMailAddress: `billing+${id}@n8n-integration.invalid`,
+	};
+}
+
+function getMutationPayload(result: unknown) {
+	return (result as GqlResponse).data?.ahf_CreateCompleteIncomingInvoice;
+}
+
+function assertNewSupplierCreated(result: unknown): NonNullable<ReturnType<typeof getMutationPayload>> {
+	assertSuccess(result);
+	const payload = getMutationPayload(result);
+	expect(payload?.newSupplierCreated).toBe(true);
+	expect(payload?.newSupplierCode).toBeGreaterThan(0);
+	expect(payload?.invoice?.lieferant?.code).toBe(payload?.newSupplierCode);
+	return payload!;
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -171,7 +224,12 @@ describe('createIncomingInvoice (integration)', () => {
 		};
 
 		const mock = createMockExecuteFunctions({
-			credentials: { baseUrl: BASE_URL, accessTokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+			credentials: {
+				baseUrl: BASE_URL,
+				accessTokenUrl: TOKEN_URL,
+				clientId: CLIENT_ID,
+				clientSecret: CLIENT_SECRET,
+			},
 			parameters: {
 				dataMode: 'json',
 				invoiceDataJson: JSON.stringify(invoiceData),
@@ -184,6 +242,78 @@ describe('createIncomingInvoice (integration)', () => {
 		});
 		const result = await execute.call(mock, 0);
 		assertSuccess(result);
+	});
+
+	testSupplierAutoCreate('creates a new supplier when lookup finds no existing supplier', async () => {
+		const supplier = uniqueSupplierIdentity();
+		const today = new Date().toISOString();
+		const invoiceItems = [
+			{
+				account: ACCOUNT_CODE,
+				taxRate: 19,
+				netAmount: 10.0,
+				grossAmount: 11.9,
+				vatAmount: 1.9,
+				note: 'n8n integration test — new supplier',
+			},
+		];
+
+		const credentials = {
+			baseUrl: BASE_URL,
+			accessTokenUrl: TOKEN_URL,
+			clientId: CLIENT_ID,
+			clientSecret: CLIENT_SECRET,
+		};
+
+		const firstInvoice = {
+			...supplier,
+			invoiceNumberSupplier: `IT-NEW-SUP-1-${Date.now()}`,
+			note: '[n8n test] auto-create supplier (first invoice)',
+			invoiceDate: today,
+			entryDate: today,
+			currency: 'EUR',
+			invoiceItems,
+		};
+
+		const firstResult = await execute.call(
+			createMockExecuteFunctions({
+				credentials,
+				parameters: {
+					dataMode: 'json',
+					invoiceDataJson: JSON.stringify(firstInvoice),
+					attachmentsUi: {},
+				},
+			}),
+			0,
+		);
+		const firstPayload = assertNewSupplierCreated(firstResult);
+
+		// Same supplier identity — should match the Lieferant created above, not create another.
+		const secondInvoice = {
+			...supplier,
+			invoiceNumberSupplier: `IT-NEW-SUP-2-${Date.now()}`,
+			note: '[n8n test] auto-create supplier (second invoice)',
+			invoiceDate: today,
+			entryDate: today,
+			currency: 'EUR',
+			invoiceItems,
+		};
+
+		const secondResult = await execute.call(
+			createMockExecuteFunctions({
+				credentials,
+				parameters: {
+					dataMode: 'json',
+					invoiceDataJson: JSON.stringify(secondInvoice),
+					attachmentsUi: {},
+				},
+			}),
+			0,
+		);
+		assertSuccess(secondResult);
+		const secondPayload = getMutationPayload(secondResult);
+		expect(secondPayload?.newSupplierCreated).toBe(false);
+		expect(secondPayload?.invoice?.lieferant?.code).toBe(firstPayload.newSupplierCode);
 	});
 
 	test('creates invoice via top-level JSON mode (LLM output path)', async () => {
@@ -209,17 +339,34 @@ describe('createIncomingInvoice (integration)', () => {
 
 		// Without attachment
 		const mockNoAttach = createMockExecuteFunctions({
-			credentials: { baseUrl: BASE_URL, accessTokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
-			parameters: { dataMode: 'json', invoiceDataJson: JSON.stringify(invoiceData), attachmentsUi: {} },
+			credentials: {
+				baseUrl: BASE_URL,
+				accessTokenUrl: TOKEN_URL,
+				clientId: CLIENT_ID,
+				clientSecret: CLIENT_SECRET,
+			},
+			parameters: {
+				dataMode: 'json',
+				invoiceDataJson: JSON.stringify(invoiceData),
+				attachmentsUi: {},
+			},
 		});
 		assertSuccess(await execute.call(mockNoAttach, 0));
 
 		// With attachment
 		const mockWithAttach = createMockExecuteFunctions({
-			credentials: { baseUrl: BASE_URL, accessTokenUrl: TOKEN_URL, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET },
+			credentials: {
+				baseUrl: BASE_URL,
+				accessTokenUrl: TOKEN_URL,
+				clientId: CLIENT_ID,
+				clientSecret: CLIENT_SECRET,
+			},
 			parameters: {
 				dataMode: 'json',
-				invoiceDataJson: JSON.stringify({ ...invoiceData, invoiceNumberSupplier: `IT-${Date.now()}` }),
+				invoiceDataJson: JSON.stringify({
+					...invoiceData,
+					invoiceNumberSupplier: `IT-${Date.now()}`,
+				}),
 				attachmentsUi: { files: [{ binaryPropertyName: 'receipt' }] },
 			},
 			binaryData: {
@@ -275,10 +422,7 @@ describe('createIncomingInvoice (integration)', () => {
 		const mock = createMockExecuteFunctions({
 			...baseOpts('multi PDF', {
 				attachmentsUi: {
-					files: [
-						{ binaryPropertyName: 'receipt0' },
-						{ binaryPropertyName: 'receipt1' },
-					],
+					files: [{ binaryPropertyName: 'receipt0' }, { binaryPropertyName: 'receipt1' }],
 				},
 			}),
 			binaryData: {
@@ -309,7 +453,10 @@ describe('createIncomingInvoice (integration)', () => {
 		const mock = createMockExecuteFunctions({
 			...baseOpts('JSON attachments', {
 				attachmentsMode: 'json',
-				attachmentsJson: JSON.stringify([{ binaryPropertyName: 'attach_0' }, { binaryPropertyName: 'attach_1' }]),
+				attachmentsJson: JSON.stringify([
+					{ binaryPropertyName: 'attach_0' },
+					{ binaryPropertyName: 'attach_1' },
+				]),
 			}),
 			binaryData: {
 				attach_0: makeBinaryEntry('sample-invoice.pdf', 'application/pdf'),
@@ -388,12 +535,16 @@ describe('createIncomingInvoice (integration)', () => {
 		const mock = createMockExecuteFunctions(baseOpts('output simplified'));
 		const result = await execute.call(mock, 0);
 		assertSuccess(result);
-		const invoice = (result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } })
-			.data?.ahf_CreateCompleteIncomingInvoice;
+		const payload = (
+			result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } }
+		).data?.ahf_CreateCompleteIncomingInvoice;
+		expect(payload).toBeDefined();
+		expect(payload).toHaveProperty('invoiceCreated');
+		const invoice = payload?.invoice as Record<string, unknown> | undefined;
 		expect(invoice).toBeDefined();
 		expect(invoice).toHaveProperty('code');
 		expect(invoice).toHaveProperty('rNummer');
-		// fields outside the simplified set are absent
+		// fields outside the simplified set are absent on invoice
 		expect(invoice).not.toHaveProperty('buchungen');
 		expect(invoice).not.toHaveProperty('notiz');
 	});
@@ -402,8 +553,11 @@ describe('createIncomingInvoice (integration)', () => {
 		const mock = createMockExecuteFunctions(baseOpts('output raw', { invoiceOutput: 'raw' }));
 		const result = await execute.call(mock, 0);
 		assertSuccess(result);
-		const invoice = (result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } })
-			.data?.ahf_CreateCompleteIncomingInvoice;
+		const payload = (
+			result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } }
+		).data?.ahf_CreateCompleteIncomingInvoice;
+		expect(payload).toBeDefined();
+		const invoice = payload?.invoice as Record<string, unknown> | undefined;
 		expect(invoice).toBeDefined();
 		// raw includes fields outside the simplified set
 		expect(invoice).toHaveProperty('buchungen');
@@ -419,9 +573,11 @@ describe('createIncomingInvoice (integration)', () => {
 		);
 		const result = await execute.call(mock, 0);
 		assertSuccess(result);
-		const invoice = (result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } })
-			.data?.ahf_CreateCompleteIncomingInvoice;
-		expect(invoice).toBeDefined();
-		expect(Object.keys(invoice ?? {})).toEqual(['code', 'rNummer']);
+		const payload = (
+			result as { data?: { ahf_CreateCompleteIncomingInvoice?: Record<string, unknown> } }
+		).data?.ahf_CreateCompleteIncomingInvoice;
+		expect(payload).toBeDefined();
+		expect(payload).toHaveProperty('invoiceCreated');
+		expect(Object.keys(payload?.invoice ?? {})).toEqual(['code', 'rNummer']);
 	});
 });
