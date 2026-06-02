@@ -10,7 +10,7 @@ interface Mandant {
 
 function mandantLabel(mandant: Mandant): string {
 	const name = mandant.mandantenbezeichnung?.trim() || mandant.name?.trim();
-	return name ? `${name} (${mandant.code})` : String(mandant.code);
+	return name || String(mandant.code);
 }
 
 /**
