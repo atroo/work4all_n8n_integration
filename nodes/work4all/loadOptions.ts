@@ -35,7 +35,9 @@ export async function getMandanten(this: ILoadOptionsFunctions): Promise<INodePr
 			method: 'POST',
 			url: `${baseUrl}/api/Mandant/query`,
 			headers: { 'Content-Type': 'application/json', 'x-version': '2' },
-			body: {},
+			// The endpoint rejects an empty body (HTTP 400), so we always send a
+			// non-empty filter. A high `max` returns all tenants in one page.
+			body: { max: 1000, page: 0 },
 			json: true,
 		},
 	)) as Mandant[] | undefined;
