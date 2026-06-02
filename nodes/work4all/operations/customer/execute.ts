@@ -1,6 +1,6 @@
 import { IExecuteFunctions, NodeApiError, NodeOperationError } from 'n8n-workflow';
 
-import { getClient } from '../../auth';
+import { graphqlRequest } from '../../request';
 
 const GQL_GET_KUNDEN = `
 	query getKunden($querySize: Int, $queryPage: Int, $filter: String) {
@@ -111,16 +111,8 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 	const operation = this.getNodeParameter('operation', itemIndex) as string;
 
 	try {
-		const { baseUrl } = await getClient(this);
-
 		const gql = (query: string, variables: Record<string, unknown>) =>
-			this.helpers.httpRequestWithAuthentication.call(this, 'work4allOAuth2Api', {
-				method: 'POST',
-				url: `${baseUrl}/graphql`,
-				headers: { 'Content-Type': 'application/json' },
-				body: { query, variables },
-				json: true,
-			});
+			graphqlRequest(this, query, variables, itemIndex);
 
 		if (operation === 'getCustomer') {
 			const customerCode = this.getNodeParameter('customerCode', itemIndex) as number;
@@ -135,7 +127,7 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 
 		if (operation === 'getManyCustomers') {
 			const querySize = this.getNodeParameter('querySize', itemIndex, 100) as number;
-			const queryPage = this.getNodeParameter('queryPage', itemIndex, 1) as number;
+			const queryPage = this.getNodeParameter('queryPage', itemIndex, 0) as number;
 			const filterRaw = this.getNodeParameter('filter', itemIndex, '') as string;
 			const output = this.getNodeParameter('output', itemIndex, 'simplified') as string;
 			const outputFields = this.getNodeParameter('outputFields', itemIndex, '') as string;
@@ -160,7 +152,7 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 				if (val) input[field] = val;
 			}
 
-			return gql(GQL_UPSERT_KUNDE, { input, relations: {} });
+			return (await gql(GQL_UPSERT_KUNDE, { input, relations: {} })) as object;
 		}
 
 		throw new NodeOperationError(this.getNode(), `Unknown customer operation: ${operation}`);

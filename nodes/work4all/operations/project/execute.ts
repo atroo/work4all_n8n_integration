@@ -1,6 +1,6 @@
 import { IExecuteFunctions, NodeApiError, NodeOperationError } from 'n8n-workflow';
 
-import { getClient } from '../../auth';
+import { graphqlRequest } from '../../request';
 
 const GQL_GET_PROJEKTE = `
 	query getProjekte($querySize: Int, $queryPage: Int, $filter: String) {
@@ -107,16 +107,8 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 	const operation = this.getNodeParameter('operation', itemIndex) as string;
 
 	try {
-		const { baseUrl } = await getClient(this);
-
 		const gql = (variables: Record<string, unknown>) =>
-			this.helpers.httpRequestWithAuthentication.call(this, 'work4allOAuth2Api', {
-				method: 'POST',
-				url: `${baseUrl}/graphql`,
-				headers: { 'Content-Type': 'application/json' },
-				body: { query: GQL_GET_PROJEKTE, variables },
-				json: true,
-			});
+			graphqlRequest(this, GQL_GET_PROJEKTE, variables, itemIndex);
 
 		if (operation === 'getProject') {
 			const projectCode = this.getNodeParameter('projectCode', itemIndex) as number;
@@ -131,7 +123,7 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 
 		if (operation === 'getManyProjects') {
 			const querySize = this.getNodeParameter('projectQuerySize', itemIndex, 100) as number;
-			const queryPage = this.getNodeParameter('projectQueryPage', itemIndex, 1) as number;
+			const queryPage = this.getNodeParameter('projectQueryPage', itemIndex, 0) as number;
 			const filterRaw = this.getNodeParameter('projectFilter', itemIndex, '') as string;
 			const output = this.getNodeParameter('projectOutput', itemIndex, 'simplified') as string;
 			const outputFields = this.getNodeParameter('projectOutputFields', itemIndex, '') as string;

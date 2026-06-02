@@ -30,8 +30,9 @@ export const projectDescription: INodeProperties[] = [
 		displayName: 'Page',
 		name: 'projectQueryPage',
 		type: 'number',
-		default: 1,
+		default: 0,
 		displayOptions: { show: { operation: ['getManyProjects'] } },
+		description: 'Zero-based page index — the first page is 0',
 	},
 	{
 		displayName: 'Filter (JSON)',

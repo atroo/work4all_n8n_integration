@@ -1,5 +1,7 @@
 import type { IBinaryData, IExecuteFunctions, INode } from 'n8n-workflow';
 
+import { MANDANT_HEADER } from '../../nodes/work4all/request';
+
 export interface MockBinaryEntry {
 	data: IBinaryData;
 	buffer: Buffer;
@@ -85,11 +87,13 @@ export function createMockExecuteFunctions(opts: MockOptions): IExecuteFunctions
 						const method = (requestOpts['method'] as string) ?? 'GET';
 						const extraHeaders = (requestOpts['headers'] as Record<string, string>) ?? {};
 						const body = requestOpts['body'];
+						const mandant = String(opts.parameters['mandant'] ?? '1');
 
 						const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
 						const headers: Record<string, string> = {
 							...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
 							...extraHeaders,
+							[MANDANT_HEADER]: extraHeaders[MANDANT_HEADER] ?? mandant,
 							Authorization: `Bearer ${accessToken}`,
 						};
 

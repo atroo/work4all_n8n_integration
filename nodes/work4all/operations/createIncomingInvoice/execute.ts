@@ -1,6 +1,6 @@
 import { IExecuteFunctions, NodeApiError } from 'n8n-workflow';
 
-import { getClient } from '../../auth';
+import { graphqlRequest, work4allRequest } from '../../request';
 
 const GQL_MUTATION = `
 	mutation ahf_CreateCompleteIncomingInvoice(
@@ -155,7 +155,7 @@ interface UploadResponse {
 
 async function uploadFile(
 	ctx: IExecuteFunctions,
-	baseUrl: string,
+	itemIndex: number,
 	buffer: Buffer,
 	fileName: string,
 	mimeType: string,
@@ -164,11 +164,15 @@ async function uploadFile(
 	const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
 	form.append('myFile', new Blob([arrayBuffer], { type: mimeType }), fileName);
 
-	const json = await ctx.helpers.httpRequestWithAuthentication.call(ctx, 'work4allOAuth2Api', {
-		method: 'POST',
-		url: `${baseUrl}/api/file?type=TempDatei`,
-		body: form as unknown as object,
-	}) as UploadResponse;
+	const json = (await work4allRequest(
+		ctx,
+		{
+			method: 'POST',
+			path: '/api/file?type=TempDatei',
+			body: form as unknown as object,
+		},
+		itemIndex,
+	)) as UploadResponse;
 
 	if (!json.fileStored || !json.generatedObject) {
 		throw new Error(
@@ -181,8 +185,6 @@ async function uploadFile(
 
 export async function execute(this: IExecuteFunctions, itemIndex: number): Promise<object> {
 	try {
-		const { baseUrl } = await getClient(this);
-
 		const dataMode = this.getNodeParameter('dataMode', itemIndex) as string;
 
 		let details: Record<string, unknown>;
@@ -237,7 +239,7 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 			const buffer = await this.helpers.getBinaryDataBuffer(itemIndex, binaryPropertyName);
 			const tempFileId = await uploadFile(
 				this,
-				baseUrl,
+				itemIndex,
 				buffer,
 				binaryData.fileName ?? 'attachment',
 				binaryData.mimeType,
@@ -250,19 +252,15 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 		const invoiceOutput = this.getNodeParameter('invoiceOutput', itemIndex, 'simplified') as string;
 		const invoiceOutputFields = this.getNodeParameter('invoiceOutputFields', itemIndex, '') as string;
 
-		const result = await this.helpers.httpRequestWithAuthentication.call(this, 'work4allOAuth2Api', {
-			method: 'POST',
-			url: `${baseUrl}/graphql`,
-			headers: { 'Content-Type': 'application/json' },
-			body: {
-				query: GQL_MUTATION,
-				variables: {
-					data: { ...details, invoiceItems },
-					...(receipts && { receipts }),
-				},
+		const result = await graphqlRequest(
+			this,
+			GQL_MUTATION,
+			{
+				data: { ...details, invoiceItems },
+				...(receipts && { receipts }),
 			},
-			json: true,
-		});
+			itemIndex,
+		);
 
 		assertMutationSuccess(result);
 

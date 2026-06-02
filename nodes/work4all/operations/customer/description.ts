@@ -88,8 +88,9 @@ export const customerDescription: INodeProperties[] = [
 		displayName: 'Page',
 		name: 'queryPage',
 		type: 'number',
-		default: 1,
+		default: 0,
 		displayOptions: { show: { operation: ['getManyCustomers'] } },
+		description: 'Zero-based page index — the first page is 0',
 	},
 	{
 		displayName: 'Filter (JSON)',

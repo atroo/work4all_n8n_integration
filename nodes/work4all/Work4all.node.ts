@@ -1,6 +1,14 @@
-import { IDataObject, IExecuteFunctions, INodeExecutionData, INodeType, INodeTypeDescription } from 'n8n-workflow';
+import {
+	IDataObject,
+	IExecuteFunctions,
+	INodeExecutionData,
+	INodeType,
+	INodeTypeDescription,
+} from 'n8n-workflow';
 
+import { getMandanten } from './loadOptions';
 import { createIncomingInvoice, customer, project } from './operations';
+import { mandantDescription } from './properties/mandant';
 
 const customerOps = ['createCustomer', 'getCustomer', 'getManyCustomers', 'updateCustomer'];
 const projectOps = ['getProject', 'getManyProjects'];
@@ -20,6 +28,7 @@ export class Work4all implements INodeType {
 		outputs: ['main'],
 		credentials: [{ name: 'work4allOAuth2Api', required: true }],
 		properties: [
+			mandantDescription,
 			{
 				displayName: 'Operation',
 				name: 'operation',
@@ -75,6 +84,12 @@ export class Work4all implements INodeType {
 			...customer.description,
 			...project.description,
 		],
+	};
+
+	methods = {
+		loadOptions: {
+			getMandanten,
+		},
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {

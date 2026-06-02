@@ -8,6 +8,19 @@ This is an n8n community node package that integrates [work4all](https://work4al
   - Form-field mode (fill each field individually)
   - JSON mode (pass a single JSON object — ideal for LLM output)
   - File attachments (PDFs, XMLs, ZIPs) via binary data from upstream nodes
+- **Customers** — create, update, and retrieve customers (single or paginated list)
+- **Projects** — retrieve projects (single or paginated list)
+- **Multi-tenant (Mandant) support** — pick the target work4all tenant per node; the tenant list is loaded directly from your instance
+
+## Multi-tenant (Mandant) support
+
+work4all instances can host multiple tenants (Mandanten). Every node has a **Mandant** field at the top that controls which tenant the request targets — the value is sent on each API call via the `x-work4all-mandant` HTTP header.
+
+- **Default** is `1`.
+- The dropdown is populated dynamically: when you open it, the node discovers the available tenants from your instance (via `GET /api/Mandant/{code}`) and shows their names, while storing the numeric tenant code internally.
+- You can also switch the field to **expression mode** to set the tenant code from data (e.g. `={{ $json.mandant }}`).
+
+The Mandant is applied consistently to **all** operations, including the file upload step of *Create Incoming Invoice*.
 
 ## Authentication
 
@@ -44,7 +57,10 @@ Copy `.env.test.example` to `.env.test` inside the container for integration tes
 
 ### Local (without container)
 
+This package requires **Node.js 22** (the `@n8n/node-cli` build/dev tooling relies on Node 22+). A [`.nvmrc`](.nvmrc) is included, so you can run:
+
 ```bash
+nvm use      # selects Node 22 from .nvmrc
 npm ci
 npm run build
 npm run dev
@@ -83,6 +99,21 @@ Creates a complete incoming invoice in work4all including line items and optiona
 **Invoice items** — enter manually via form fields or provide a JSON array.
 
 **Attachments** — attach files from binary properties of upstream nodes (e.g. HTTP Request, Gmail, Read Binary File). Supports form mode or JSON array mode for dynamic/LLM-driven attachment selection.
+
+### Customers
+
+- **Get Customer** — retrieve a single customer by its internal code.
+- **Get Many Customers** — retrieve a paginated list, with an optional JSON filter.
+- **Create Customer** / **Update Customer** — create or update a customer record.
+
+### Projects
+
+- **Get Project** — retrieve a single project by its internal code.
+- **Get Many Projects** — retrieve a paginated list, with an optional JSON filter.
+
+> **Pagination note:** the `Page` field is **zero-based** — the first page is `0`.
+
+All list and read operations support an **Output** mode (`Simplified`, `Raw`, or `Selected Fields`) to control how much of the response is returned.
 
 ## Example Workflows
 
