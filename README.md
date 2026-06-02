@@ -17,7 +17,7 @@ This is an n8n community node package that integrates [work4all](https://work4al
 work4all instances can host multiple tenants (Mandanten). Every node has a **Mandant** field at the top that controls which tenant the request targets — the value is sent on each API call via the `x-work4all-mandant` HTTP header.
 
 - **Default** is `1`.
-- The dropdown is populated dynamically: when you open it, the node discovers the available tenants from your instance (via `GET /api/Mandant/{code}`) and shows their names, while storing the numeric tenant code internally.
+- The dropdown is populated dynamically: when you open it, the node loads the tenants your credential has access to (via `POST /api/Mandant/query`) and shows their names, while storing the numeric tenant code internally. If the credential has no tenants assigned, it falls back to tenant `1`.
 - You can also switch the field to **expression mode** to set the tenant code from data (e.g. `={{ $json.mandant }}`).
 
 The Mandant is applied consistently to **all** operations, including the file upload step of *Create Incoming Invoice*.
