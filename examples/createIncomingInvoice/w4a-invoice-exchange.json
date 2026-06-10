@@ -1,544 +1,403 @@
 {
-  "name": "w4a-invoice-exchange -- Laurin",
-  "nodes": [
-    {
-      "parameters": {
-        "resource": "folder",
-        "displayName": "Neue Eingangsrechnungen",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.microsoftOutlook",
-      "typeVersion": 2,
-      "position": [
-        -832,
-        -240
-      ],
-      "id": "42e21e73-3b18-4e34-a196-c7edc5ea8195",
-      "name": "Create Folder: Neue Eingangsrechnungen",
-      "webhookId": "39d92028-05b0-4f5a-908f-130aa28fd8a3",
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "id": "iZNGowBVWVT0AWBr",
-          "name": "invoice@work4alltest.de - LB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "resource": "folder",
-        "displayName": "Fehler",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.microsoftOutlook",
-      "typeVersion": 2,
-      "position": [
-        -576,
-        -240
-      ],
-      "id": "4f00c64a-9c51-4e1f-8a42-d6e858ef6719",
-      "name": "Create Folder: Fehler",
-      "webhookId": "9620805c-3c8e-4f77-97ef-89ce86f16f24",
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "id": "iZNGowBVWVT0AWBr",
-          "name": "invoice@work4alltest.de - LB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "resource": "folder",
-        "displayName": "Verarbeitet",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.microsoftOutlook",
-      "typeVersion": 2,
-      "position": [
-        -336,
-        -240
-      ],
-      "id": "f0b62e85-9ce3-4138-b770-7a4b9fd9709d",
-      "name": "Create Folder: Verarbeitet",
-      "webhookId": "56f9e4b0-e8a1-436a-8f2e-e2dccc175d22",
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "id": "iZNGowBVWVT0AWBr",
-          "name": "invoice@work4alltest.de - LB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "pollTimes": {
-          "item": [
-            {
-              "mode": "everyMinute"
-            }
-          ]
-        },
-        "filters": {
-          "foldersToInclude": [
-            "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdLAAA="
-          ]
-        },
-        "options": {
-          "downloadAttachments": true
-        }
-      },
-      "type": "n8n-nodes-base.microsoftOutlookTrigger",
-      "typeVersion": 1,
-      "position": [
-        -1280,
-        48
-      ],
-      "id": "1af2ac62-eee4-4442-a43a-c73c3b5beac9",
-      "name": "Trigger: Emails in Neue Eingangsrechnungen",
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "id": "iZNGowBVWVT0AWBr",
-          "name": "invoice@work4alltest.de - LB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "move",
-        "messageId": {
-          "__rl": true,
-          "value": "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwBGAAAAAAB0sAUOHy4fSK8zXAyosp7vBwD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdNAAD5F53ZtU8FQ5T0NXXlFAlwAAAft0ToAAA=",
-          "mode": "list",
-          "cachedResultName": "no-invoice",
-          "cachedResultUrl": "https://outlook.office365.com/owa/?ItemID=AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwBGAAAAAAB0sAUOHy4fSK8zXAyosp7vBwD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdNAAD5F53ZtU8FQ5T0NXXlFAlwAAAft0ToAAA%3D&exvsurl=1&viewmodel=ReadMessageItem"
-        },
-        "folderId": {
-          "__rl": true,
-          "value": "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdLAAA=",
-          "mode": "list",
-          "cachedResultName": "Neue Eingangsrechnungen",
-          "cachedResultUrl": "https://outlook.office365.com/mail/AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdLAAA%3D"
-        }
-      },
-      "type": "n8n-nodes-base.microsoftOutlook",
-      "typeVersion": 2,
-      "position": [
-        -1024,
-        -240
-      ],
-      "id": "c323b47e-03fa-48fe-b5b1-ea5669840ac9",
-      "name": "Move to Eingangsrechnungen",
-      "webhookId": "45a6c775-3cb6-460a-8a27-925e674e91b8",
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "id": "iZNGowBVWVT0AWBr",
-          "name": "invoice@work4alltest.de - LB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "move",
-        "messageId": {
-          "__rl": true,
-          "value": "={{ $('Allow Single Message Access').item.json.id }}",
-          "mode": "id"
-        },
-        "folderId": {
-          "__rl": true,
-          "value": "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdMAAA=",
-          "mode": "list",
-          "cachedResultName": "Fehler",
-          "cachedResultUrl": "https://outlook.office365.com/mail/AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdMAAA%3D"
-        }
-      },
-      "type": "n8n-nodes-base.microsoftOutlook",
-      "typeVersion": 2,
-      "position": [
-        736,
-        368
-      ],
-      "id": "4599d893-aa5a-4c65-8e3d-77085f7338d7",
-      "name": "Move into Fehler Folder",
-      "webhookId": "cee47aa2-8b92-4ade-b499-3ee150f14b67",
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "id": "iZNGowBVWVT0AWBr",
-          "name": "invoice@work4alltest.de - LB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "d26a6695-69cd-4253-a407-9ced41587f40",
-              "leftValue": "={{ $json.errors }}",
-              "rightValue": "",
-              "operator": {
-                "type": "array",
-                "operation": "exists",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -32,
-        160
-      ],
-      "id": "70a0d94a-7fda-472e-899b-69875741be3b",
-      "name": "Has Errors?"
-    },
-    {
-      "parameters": {
-        "toRecipients": "laurin@atroo.de, t.schmielau@work4all.de",
-        "subject": "Da ist was schiefgelaufen",
-        "bodyContent": "={{ $('Call \\'work4all-invoice-workflow - Laurin\\'').item.json.error ?? $('Call \\'work4all-invoice-workflow - Laurin\\'').item.json.errors.toJsonString() }}",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.microsoftOutlook",
-      "typeVersion": 2,
-      "position": [
-        432,
-        368
-      ],
-      "id": "f95564a7-86b3-4425-bc0f-ca9010c1e847",
-      "name": "Send Error Message",
-      "webhookId": "1096ad99-0334-45c3-84aa-d4681578f073",
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "id": "iZNGowBVWVT0AWBr",
-          "name": "invoice@work4alltest.de - LB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "move",
-        "messageId": {
-          "__rl": true,
-          "value": "={{ $('Allow Single Message Access').item.json.id }}",
-          "mode": "id"
-        },
-        "folderId": {
-          "__rl": true,
-          "value": "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdNAAA=",
-          "mode": "list",
-          "cachedResultName": "Verarbeitet",
-          "cachedResultUrl": "https://outlook.office365.com/mail/AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdNAAA%3D"
-        }
-      },
-      "type": "n8n-nodes-base.microsoftOutlook",
-      "typeVersion": 2,
-      "position": [
-        736,
-        48
-      ],
-      "id": "750e6dd9-ca48-40cc-8858-42646f9c1961",
-      "name": "Move into Verarbeitet",
-      "webhookId": "a1d4cbae-fb4e-431e-b789-8202879ef81d",
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "id": "iZNGowBVWVT0AWBr",
-          "name": "invoice@work4alltest.de - LB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsCode": "return {'error':$json.error }"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -32,
-        384
-      ],
-      "id": "fcc4a993-314c-4da3-ab5e-c8afc663758a",
-      "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "mode": "id",
-          "value": "ecAMgohZk1o8g8im"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "mode": "each",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        -480,
-        288
-      ],
-      "id": "37d465f4-7a8a-4d24-b89c-a133044f952e",
-      "name": "Call 'work4all-invoice-workflow - Laurin'",
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "operation": "getAll",
-        "returnAll": true,
-        "filtersUI": {
-          "values": {
-            "filters": {
-              "foldersToInclude": [
-                "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdLAAA="
-              ]
-            }
-          }
-        },
-        "options": {
-          "downloadAttachments": true
-        }
-      },
-      "type": "n8n-nodes-base.microsoftOutlook",
-      "typeVersion": 2,
-      "position": [
-        -1024,
-        288
-      ],
-      "id": "3a4ce7e4-2ad1-4b46-b3dd-bfba9ad3a5b6",
-      "name": "Get many messages",
-      "webhookId": "a411a1a0-dd87-406a-a98d-ec59d187432f",
-      "retryOnFail": true,
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "id": "iZNGowBVWVT0AWBr",
-          "name": "invoice@work4alltest.de - LB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "minutes",
-              "minutesInterval": 1
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.3,
-      "position": [
-        -1328,
-        288
-      ],
-      "id": "e3021f77-8099-4d62-8dbd-ab9a9e29d721",
-      "name": "Schedule Trigger"
-    },
-    {
-      "parameters": {
-        "operation": "getAll",
-        "returnAll": true,
-        "filtersUI": {
-          "values": {
-            "filters": {
-              "foldersToInclude": [
-                "AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAcbEdLAAA="
-              ]
-            }
-          }
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.microsoftOutlook",
-      "typeVersion": 2,
-      "position": [
-        -864,
-        -480
-      ],
-      "id": "4cdb150d-9ccc-4adc-b634-3e3edf497dca",
-      "name": "Get many messages1",
-      "webhookId": "e2eb20a1-1353-4aea-bb87-86b06e608bd2",
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "id": "iZNGowBVWVT0AWBr",
-          "name": "invoice@work4alltest.de - LB"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsCode": "// Add a new field called 'myNewField' to the JSON of the item\n$input.item.json.myNewField = 1;\n\nreturn $input.item;"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -768,
-        288
-      ],
-      "id": "8a508905-040f-4edf-b0ae-ad891bd38982",
-      "name": "Allow Single Message Access"
-    }
-  ],
-  "pinData": {},
-  "connections": {
-    "Create Folder: Neue Eingangsrechnungen": {
-      "main": [
-        [
-          {
-            "node": "Create Folder: Fehler",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create Folder: Fehler": {
-      "main": [
-        [
-          {
-            "node": "Create Folder: Verarbeitet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Trigger: Emails in Neue Eingangsrechnungen": {
-      "main": [
-        []
-      ]
-    },
-    "Move into Fehler Folder": {
-      "main": [
-        []
-      ]
-    },
-    "Has Errors?": {
-      "main": [
-        [
-          {
-            "node": "Send Error Message",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Move into Verarbeitet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Move into Verarbeitet": {
-      "main": [
-        []
-      ]
-    },
-    "Code in JavaScript": {
-      "main": [
-        [
-          {
-            "node": "Send Error Message",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send Error Message": {
-      "main": [
-        [
-          {
-            "node": "Move into Fehler Folder",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call 'work4all-invoice-workflow - Laurin'": {
-      "main": [
-        [
-          {
-            "node": "Has Errors?",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Code in JavaScript",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Schedule Trigger": {
-      "main": [
-        [
-          {
-            "node": "Get many messages",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get many messages": {
-      "main": [
-        [
-          {
-            "node": "Allow Single Message Access",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Allow Single Message Access": {
-      "main": [
-        [
-          {
-            "node": "Call 'work4all-invoice-workflow - Laurin'",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": false
-  },
-  "versionId": "c05d2a3b-dbca-4fdf-b9db-e862e63c83ed",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "296be6635839d6898d9738c77c7973f94245430cfacaa9ab6123dfbd23a17154"
-  },
-  "id": "cAYY1L8gIYpHq62K",
-  "tags": []
+	"name": "w4a-invoice-exchange",
+	"nodes": [
+		{
+			"parameters": {
+				"conditions": {
+					"options": {
+						"caseSensitive": true,
+						"leftValue": "",
+						"typeValidation": "strict",
+						"version": 3
+					},
+					"conditions": [
+						{
+							"id": "d26a6695-69cd-4253-a407-9ced41587f40",
+							"leftValue": "={{ $json.errors }}",
+							"rightValue": "",
+							"operator": {
+								"type": "array",
+								"operation": "exists",
+								"singleValue": true
+							}
+						}
+					],
+					"combinator": "and"
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.if",
+			"typeVersion": 2.3,
+			"position": [1152, 608],
+			"id": "da54988f-84a0-444b-a0ae-9fb7ace0333f",
+			"name": "Has Errors?"
+		},
+		{
+			"parameters": {
+				"toRecipients": "laurin@atroo.de, t.schmielau@work4all.de",
+				"subject": "=Workflow https://n8n.work4allcloud.de/workflow/{{ $workflow.id }} had an error",
+				"bodyContent": "={{ $('Call \\'work4all-invoice-workflow - Laurin\\'').item.json.error ?? $('Call \\'work4all-invoice-workflow - Laurin\\'').item.json.errors.toJsonString() }}",
+				"additionalFields": {}
+			},
+			"type": "n8n-nodes-base.microsoftOutlook",
+			"typeVersion": 2,
+			"position": [1568, 816],
+			"id": "06255488-c7b4-448a-8a9a-a9fe6b1e68f0",
+			"name": "Send Error Message",
+			"webhookId": "4db9bbf8-40d6-451e-8c32-5d663a2efbbb",
+			"credentials": {
+				"microsoftOutlookOAuth2Api": {
+					"id": "iZNGowBVWVT0AWBr",
+					"name": "invoice@work4alltest.de - LB"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"mode": "runOnceForEachItem",
+				"jsCode": "return {'error':$json.error }"
+			},
+			"type": "n8n-nodes-base.code",
+			"typeVersion": 2,
+			"position": [1200, 832],
+			"id": "c4db56cc-7dad-4a17-859e-a818750873de",
+			"name": "Code in JavaScript"
+		},
+		{
+			"parameters": {
+				"workflowId": {
+					"__rl": true,
+					"value": "ecAMgohZk1o8g8im",
+					"mode": "list",
+					"cachedResultUrl": "/workflow/ecAMgohZk1o8g8im",
+					"cachedResultName": "work4all-invoice-workflow - Laurin"
+				},
+				"workflowInputs": {
+					"mappingMode": "defineBelow",
+					"value": {},
+					"matchingColumns": [],
+					"schema": [],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": true
+				},
+				"mode": "each",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.executeWorkflow",
+			"typeVersion": 1.3,
+			"position": [800, 704],
+			"id": "99c51f97-7e97-490f-b12f-8dbc3df7e0dc",
+			"name": "Call 'work4all-invoice-workflow - Laurin'",
+			"onError": "continueErrorOutput"
+		},
+		{
+			"parameters": {
+				"rule": {
+					"interval": [
+						{
+							"field": "minutes",
+							"minutesInterval": 1
+						}
+					]
+				}
+			},
+			"type": "n8n-nodes-base.scheduleTrigger",
+			"typeVersion": 1.3,
+			"position": [-48, 704],
+			"id": "2da2e59b-a982-482f-829d-5f25ebafe5bf",
+			"name": "Schedule Trigger"
+		},
+		{
+			"parameters": {
+				"mode": "runOnceForEachItem",
+				"jsCode": "// Add a new field called 'myNewField' to the JSON of the item\n$input.item.json.myNewField = 1;\n\nreturn $input.item;"
+			},
+			"type": "n8n-nodes-base.code",
+			"typeVersion": 2,
+			"position": [512, 704],
+			"id": "83626123-4758-4a82-8258-17a7d3ee1efe",
+			"name": "Allow Single Message Access"
+		},
+		{
+			"parameters": {
+				"operation": "update",
+				"messageId": {
+					"__rl": true,
+					"value": "={{ $('Allow Single Message Access').item.json.id }}",
+					"mode": "id"
+				},
+				"updateFields": {
+					"categories": ["Green category"]
+				}
+			},
+			"type": "n8n-nodes-base.microsoftOutlook",
+			"typeVersion": 2,
+			"position": [2256, 640],
+			"id": "ae4e72ef-a221-4bf8-b5b0-214bc4801732",
+			"name": "Mark Green Category",
+			"webhookId": "3bbe9c2f-3380-4a94-a0ea-05621687497d",
+			"credentials": {
+				"microsoftOutlookOAuth2Api": {
+					"id": "iZNGowBVWVT0AWBr",
+					"name": "invoice@work4alltest.de - LB"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "update",
+				"messageId": {
+					"__rl": true,
+					"value": "={{ $('Allow Single Message Access').item.json.id }}",
+					"mode": "id"
+				},
+				"updateFields": {
+					"categories": ["Red category"]
+				}
+			},
+			"type": "n8n-nodes-base.microsoftOutlook",
+			"typeVersion": 2,
+			"position": [1856, 816],
+			"id": "56113577-3332-4f9f-b500-702cf82e1243",
+			"name": "Mark Red Category",
+			"webhookId": "606b3d2d-a23a-430a-9cae-1bbf1ee04314",
+			"credentials": {
+				"microsoftOutlookOAuth2Api": {
+					"id": "iZNGowBVWVT0AWBr",
+					"name": "invoice@work4alltest.de - LB"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "getAll",
+				"returnAll": true,
+				"output": "raw",
+				"filtersUI": {
+					"values": {
+						"filters": {
+							"custom": "not(categories/any(c:c eq 'Red category')) and not(categories/any(c:c eq 'Green category'))",
+							"foldersToInclude": [
+								"AAMkAGVhNzdlZmNjLWFkNjItNGMzMi04YzZkLWE4YTFkYWY4NTI3NwAuAAAAAAB0sAUOHy4fSK8zXAyosp7vAQD5F53ZtU8FQ5T0NXXlFAlwAAAiGDTXAAA="
+							]
+						}
+					}
+				},
+				"options": {
+					"downloadAttachments": true
+				}
+			},
+			"type": "n8n-nodes-base.microsoftOutlook",
+			"typeVersion": 2,
+			"position": [256, 704],
+			"id": "aaf820f4-7e71-4939-92d5-c71d064760bb",
+			"name": "Get Not Green, Not Red messages in \"Kreditor Agent\" Folder",
+			"webhookId": "257e1506-34f5-41ec-9005-17fd8f150e91",
+			"retryOnFail": true,
+			"credentials": {
+				"microsoftOutlookOAuth2Api": {
+					"id": "iZNGowBVWVT0AWBr",
+					"name": "invoice@work4alltest.de - LB"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"conditions": {
+					"options": {
+						"caseSensitive": true,
+						"leftValue": "",
+						"typeValidation": "strict",
+						"version": 3
+					},
+					"conditions": [
+						{
+							"id": "d20cbe3b-92aa-4cdf-85ba-1158a2c9f54f",
+							"leftValue": "={{ $json.invoiceData.ahf_CreateCompleteIncomingInvoice.newSupplierCreated }}",
+							"rightValue": true,
+							"operator": {
+								"type": "boolean",
+								"operation": "equals"
+							}
+						},
+						{
+							"id": "7e81baf3-a1d1-4709-af2a-afbd5f87dd0c",
+							"leftValue": "={{ $json.invoiceData.ahf_CreateCompleteIncomingInvoice.accountSet }}",
+							"rightValue": true,
+							"operator": {
+								"type": "boolean",
+								"operation": "equals"
+							}
+						},
+						{
+							"id": "9217a33b-c484-4449-84dc-a4223258a114",
+							"leftValue": "={{ $json.invoiceData.ahf_CreateCompleteIncomingInvoice.taxKeytSet }}",
+							"rightValue": true,
+							"operator": {
+								"type": "boolean",
+								"operation": "equals"
+							}
+						}
+					],
+					"combinator": "or"
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.if",
+			"typeVersion": 2.3,
+			"position": [1840, 432],
+			"id": "1eadc978-a137-46c2-90a5-23a75183f05c",
+			"name": "Account or TaxKey or Supplier was Set?"
+		},
+		{
+			"parameters": {
+				"operation": "update",
+				"messageId": {
+					"__rl": true,
+					"value": "={{ $('Allow Single Message Access').item.json.id }}",
+					"mode": "id"
+				},
+				"updateFields": {
+					"categories": ["Yellow category", "Green category"]
+				}
+			},
+			"type": "n8n-nodes-base.microsoftOutlook",
+			"typeVersion": 2,
+			"position": [2304, 416],
+			"id": "54665dae-4b1f-4dfa-b963-30bde5dd4b0b",
+			"name": "Mark Yellow and Green Category",
+			"webhookId": "469c4b49-67b6-4ffc-a45d-6b5182dd5b8a",
+			"credentials": {
+				"microsoftOutlookOAuth2Api": {
+					"id": "iZNGowBVWVT0AWBr",
+					"name": "invoice@work4alltest.de - LB"
+				}
+			}
+		}
+	],
+	"pinData": {},
+	"connections": {
+		"Has Errors?": {
+			"main": [
+				[
+					{
+						"node": "Send Error Message",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Account or TaxKey or Supplier was Set?",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Code in JavaScript": {
+			"main": [
+				[
+					{
+						"node": "Send Error Message",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Send Error Message": {
+			"main": [
+				[
+					{
+						"node": "Mark Red Category",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Call 'work4all-invoice-workflow - Laurin'": {
+			"main": [
+				[
+					{
+						"node": "Has Errors?",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Code in JavaScript",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Schedule Trigger": {
+			"main": [
+				[
+					{
+						"node": "Get Not Green, Not Red messages in \"Kreditor Agent\" Folder",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Allow Single Message Access": {
+			"main": [
+				[
+					{
+						"node": "Call 'work4all-invoice-workflow - Laurin'",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Get Not Green, Not Red messages in \"Kreditor Agent\" Folder": {
+			"main": [
+				[
+					{
+						"node": "Allow Single Message Access",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Account or TaxKey or Supplier was Set?": {
+			"main": [
+				[
+					{
+						"node": "Mark Yellow and Green Category",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Mark Green Category",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": false,
+	"settings": {
+		"executionOrder": "v1",
+		"binaryMode": "separate",
+		"availableInMCP": false
+	},
+	"versionId": "fe27384f-5ee3-4b6e-abf6-1e098d0c4309",
+	"meta": {
+		"templateCredsSetupCompleted": true,
+		"instanceId": "296be6635839d6898d9738c77c7973f94245430cfacaa9ab6123dfbd23a17154"
+	},
+	"id": "vwBtvgt7wNLgxplT",
+	"tags": []
 }
