@@ -117,7 +117,7 @@ All list and read operations support an **Output** mode (`Simplified`, `Raw`, or
 
 ## Example Workflows
 
-The [`examples/createIncomingInvoice/`](examples/createIncomingInvoice/) directory contains ready-to-import workflows:
+The [`workflows/createIncomingInvoice/`](workflows/createIncomingInvoice/) directory contains ready-to-import workflows:
 
 | File | Description |
 |------|-------------|

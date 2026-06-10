@@ -29,7 +29,7 @@
 	},
 	"files": [
 		"dist",
-		"examples",
+		"workflows",
 		"README.md",
 		"LICENSE.md"
 	],

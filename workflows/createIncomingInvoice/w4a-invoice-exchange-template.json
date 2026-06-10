@@ -1,0 +1,458 @@
+{
+	"name": "Create work4all incoming invoices from Outlook inbox emails",
+	"nodes": [
+		{
+			"parameters": {
+				"content": "## Create work4all incoming invoices from Outlook inbox emails\n\nPolls an Outlook folder for new supplier emails and turns their invoice attachments into incoming invoices in **work4all**. The AI extraction and booking is done by the companion sub-workflow template; this workflow handles scheduling, fetching, error notifications and Outlook categorisation.\n\n## Who's it for\nTeams using **work4all** and **Microsoft Outlook** that receive supplier invoices by email and want to stop entering them by hand.\n\n## How it works\n1. A schedule trigger fetches messages from a chosen Outlook folder that are not yet categorised red or green.\n2. Each message is passed to the **invoice extraction sub-workflow**, which creates the work4all incoming invoice.\n3. The email is categorised: **green** = booked, **yellow + green** = booked but please review (a supplier / account / tax key was set automatically), **red** = error (a notification email is sent).\n\n## How to set up\n1. Import the companion template **\"Create a work4all incoming invoice from email attachments using AI\"** first.\n2. Open *Run invoice extraction sub-workflow* and select that imported workflow.\n3. Add your **Microsoft Outlook** credential.\n4. In *Set Config*, enter the error-notification recipient(s).\n5. In *Get inbox messages*, choose the folder to monitor.\n6. Make sure the **Red / Green / Yellow** categories exist in your mailbox.\n\n## Requirements\n- A Microsoft Outlook account\n- The companion extraction sub-workflow and the verified `n8n-nodes-work4all` node\n\n## How to customize\n- Change the polling interval on the schedule trigger.\n- Adjust which Outlook categories are used.\n\n---\n\n## 🇩🇪 Beschreibung (Deutsch)\n\nFragt einen Outlook-Ordner nach neuen Lieferanten-E-Mails ab und wandelt deren Rechnungsanhänge in Eingangsrechnungen in **work4all** um. Die KI-Extraktion und Buchung übernimmt das zugehörige Sub-Workflow-Template; dieser Workflow kümmert sich um Zeitplanung, Abruf, Fehler-Benachrichtigungen und Outlook-Kategorisierung.\n\n### Für wen\nTeams mit **work4all** und **Microsoft Outlook**, die Lieferantenrechnungen per E-Mail erhalten und nicht mehr manuell erfassen wollen.\n\n### Funktionsweise\n1. Ein Zeitplan-Trigger holt Nachrichten aus einem gewählten Outlook-Ordner, die noch nicht rot oder grün kategorisiert sind.\n2. Jede Nachricht geht an den **Rechnungs-Extraktions-Sub-Workflow**, der die work4all-Eingangsrechnung erstellt.\n3. Die E-Mail wird kategorisiert: **grün** = gebucht, **gelb + grün** = gebucht, bitte prüfen (Lieferant/Konto/Steuerschlüssel automatisch gesetzt), **rot** = Fehler (eine Benachrichtigungs-E-Mail wird gesendet).\n\n### Einrichtung\n1. Zuerst das zugehörige Template **\"Create a work4all incoming invoice from email attachments using AI\"** importieren.\n2. Im Knoten *Run invoice extraction sub-workflow* diesen importierten Workflow auswählen.\n3. **Microsoft Outlook**-Credential hinzufügen.\n4. In *Set Config* die Empfänger der Fehler-Benachrichtigung eintragen.\n5. In *Get inbox messages* den zu überwachenden Ordner wählen.\n6. Sicherstellen, dass die Kategorien **Rot / Grün / Gelb** im Postfach existieren.\n\n### Voraussetzungen\n- Ein Microsoft-Outlook-Konto\n- Das zugehörige Extraktions-Sub-Workflow-Template und den verifizierten `n8n-nodes-work4all`-Knoten\n\n### Anpassen\n- Abrufintervall am Zeitplan-Trigger ändern.\n- Verwendete Outlook-Kategorien anpassen.",
+				"height": 1360,
+				"width": 460
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-1320, -160],
+			"id": "sticky-desc-exc",
+			"name": "Sticky Note - Description"
+		},
+		{
+			"parameters": {
+				"content": "## 1. Poll the mailbox\nEvery minute, fetch messages from the configured folder that are **not** categorised red or green yet. Choose the folder in *Get inbox messages*.",
+				"height": 200,
+				"width": 520,
+				"color": 7
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-820, 80],
+			"id": "sticky-step-poll-exc",
+			"name": "Sticky Note - Poll"
+		},
+		{
+			"parameters": {
+				"content": "## ⚠️ Setup required\nImport the companion template **\"Create a work4all incoming invoice from email attachments using AI\"**, then open this node and **select that workflow** here. The reference is empty on purpose.",
+				"height": 220,
+				"width": 360,
+				"color": 3
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [-140, 60],
+			"id": "sticky-relink-exc",
+			"name": "Sticky Note - Relink"
+		},
+		{
+			"parameters": {
+				"content": "## Categorise the email\n**green** = booked · **yellow + green** = booked, please review · **red** = error (notification email sent). These three categories must exist in your mailbox.",
+				"height": 220,
+				"width": 560,
+				"color": 7
+			},
+			"type": "n8n-nodes-base.stickyNote",
+			"typeVersion": 1,
+			"position": [420, -160],
+			"id": "sticky-step-cat-exc",
+			"name": "Sticky Note - Categorise"
+		},
+		{
+			"parameters": {
+				"rule": {
+					"interval": [
+						{
+							"field": "minutes",
+							"minutesInterval": 1
+						}
+					]
+				}
+			},
+			"type": "n8n-nodes-base.scheduleTrigger",
+			"typeVersion": 1.3,
+			"position": [-820, 300],
+			"id": "2da2e59b-a982-482f-829d-5f25ebafe5bf",
+			"name": "Schedule Trigger"
+		},
+		{
+			"parameters": {
+				"assignments": {
+					"assignments": [
+						{
+							"id": "cfg-recipients",
+							"name": "errorRecipients",
+							"value": "you@example.com",
+							"type": "string"
+						}
+					]
+				},
+				"includeOtherFields": false,
+				"options": {}
+			},
+			"type": "n8n-nodes-base.set",
+			"typeVersion": 3.4,
+			"position": [-600, 300],
+			"id": "set-config-exc",
+			"name": "Set Config"
+		},
+		{
+			"parameters": {
+				"operation": "getAll",
+				"returnAll": true,
+				"output": "raw",
+				"filtersUI": {
+					"values": {
+						"filters": {
+							"custom": "not(categories/any(c:c eq 'Red category')) and not(categories/any(c:c eq 'Green category'))",
+							"foldersToInclude": ["REPLACE_WITH_YOUR_FOLDER_ID"]
+						}
+					}
+				},
+				"options": {
+					"downloadAttachments": true
+				}
+			},
+			"type": "n8n-nodes-base.microsoftOutlook",
+			"typeVersion": 2,
+			"position": [-380, 300],
+			"id": "aaf820f4-7e71-4939-92d5-c71d064760bb",
+			"name": "Get inbox messages",
+			"webhookId": "257e1506-34f5-41ec-9005-17fd8f150e91",
+			"retryOnFail": true,
+			"credentials": {
+				"microsoftOutlookOAuth2Api": {
+					"id": "REPLACE_OUTLOOK_CREDENTIAL",
+					"name": "Microsoft Outlook account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"workflowId": {
+					"__rl": true,
+					"value": "",
+					"mode": "list",
+					"cachedResultName": "Create a work4all incoming invoice from email attachments using AI"
+				},
+				"workflowInputs": {
+					"mappingMode": "defineBelow",
+					"value": {},
+					"matchingColumns": [],
+					"schema": [],
+					"attemptToConvertTypes": false,
+					"convertFieldsToString": true
+				},
+				"mode": "each",
+				"options": {}
+			},
+			"type": "n8n-nodes-base.executeWorkflow",
+			"typeVersion": 1.3,
+			"position": [-120, 300],
+			"id": "99c51f97-7e97-490f-b12f-8dbc3df7e0dc",
+			"name": "Run invoice extraction sub-workflow",
+			"onError": "continueErrorOutput"
+		},
+		{
+			"parameters": {
+				"conditions": {
+					"options": {
+						"caseSensitive": true,
+						"leftValue": "",
+						"typeValidation": "strict",
+						"version": 3
+					},
+					"conditions": [
+						{
+							"id": "d26a6695-69cd-4253-a407-9ced41587f40",
+							"leftValue": "={{ $json.errors }}",
+							"rightValue": "",
+							"operator": {
+								"type": "array",
+								"operation": "exists",
+								"singleValue": true
+							}
+						}
+					],
+					"combinator": "and"
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.if",
+			"typeVersion": 2.3,
+			"position": [180, 220],
+			"id": "da54988f-84a0-444b-a0ae-9fb7ace0333f",
+			"name": "Has errors?"
+		},
+		{
+			"parameters": {
+				"mode": "runOnceForEachItem",
+				"jsCode": "return { json: { error: $json.error } };"
+			},
+			"type": "n8n-nodes-base.code",
+			"typeVersion": 2,
+			"position": [180, 480],
+			"id": "c4db56cc-7dad-4a17-859e-a818750873de",
+			"name": "Extract error"
+		},
+		{
+			"parameters": {
+				"conditions": {
+					"options": {
+						"caseSensitive": true,
+						"leftValue": "",
+						"typeValidation": "strict",
+						"version": 3
+					},
+					"conditions": [
+						{
+							"id": "d20cbe3b-92aa-4cdf-85ba-1158a2c9f54f",
+							"leftValue": "={{ $json.invoiceData.ahf_CreateCompleteIncomingInvoice.newSupplierCreated }}",
+							"rightValue": true,
+							"operator": {
+								"type": "boolean",
+								"operation": "equals"
+							}
+						},
+						{
+							"id": "7e81baf3-a1d1-4709-af2a-afbd5f87dd0c",
+							"leftValue": "={{ $json.invoiceData.ahf_CreateCompleteIncomingInvoice.accountSet }}",
+							"rightValue": true,
+							"operator": {
+								"type": "boolean",
+								"operation": "equals"
+							}
+						},
+						{
+							"id": "9217a33b-c484-4449-84dc-a4223258a114",
+							"leftValue": "={{ $json.invoiceData.ahf_CreateCompleteIncomingInvoice.taxKeytSet }}",
+							"rightValue": true,
+							"operator": {
+								"type": "boolean",
+								"operation": "equals"
+							}
+						}
+					],
+					"combinator": "or"
+				},
+				"options": {}
+			},
+			"type": "n8n-nodes-base.if",
+			"typeVersion": 2.3,
+			"position": [460, 140],
+			"id": "1eadc978-a137-46c2-90a5-23a75183f05c",
+			"name": "Supplier/account/tax key set?"
+		},
+		{
+			"parameters": {
+				"toRecipients": "={{ $('Set Config').first().json.errorRecipients }}",
+				"subject": "=Invoice workflow \"{{ $workflow.name }}\" reported an error",
+				"bodyContent": "={{ JSON.stringify($json.error ?? $json.errors ?? {}) }}",
+				"additionalFields": {}
+			},
+			"type": "n8n-nodes-base.microsoftOutlook",
+			"typeVersion": 2,
+			"position": [460, 480],
+			"id": "06255488-c7b4-448a-8a9a-a9fe6b1e68f0",
+			"name": "Send error email",
+			"webhookId": "4db9bbf8-40d6-451e-8c32-5d663a2efbbb",
+			"credentials": {
+				"microsoftOutlookOAuth2Api": {
+					"id": "REPLACE_OUTLOOK_CREDENTIAL",
+					"name": "Microsoft Outlook account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "update",
+				"messageId": {
+					"__rl": true,
+					"value": "={{ $('Get inbox messages').item.json.id }}",
+					"mode": "id"
+				},
+				"updateFields": {
+					"categories": ["Red category"]
+				}
+			},
+			"type": "n8n-nodes-base.microsoftOutlook",
+			"typeVersion": 2,
+			"position": [720, 480],
+			"id": "56113577-3332-4f9f-b500-702cf82e1243",
+			"name": "Mark message red",
+			"webhookId": "606b3d2d-a23a-430a-9cae-1bbf1ee04314",
+			"credentials": {
+				"microsoftOutlookOAuth2Api": {
+					"id": "REPLACE_OUTLOOK_CREDENTIAL",
+					"name": "Microsoft Outlook account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "update",
+				"messageId": {
+					"__rl": true,
+					"value": "={{ $('Get inbox messages').item.json.id }}",
+					"mode": "id"
+				},
+				"updateFields": {
+					"categories": ["Yellow category", "Green category"]
+				}
+			},
+			"type": "n8n-nodes-base.microsoftOutlook",
+			"typeVersion": 2,
+			"position": [720, 40],
+			"id": "54665dae-4b1f-4dfa-b963-30bde5dd4b0b",
+			"name": "Mark message yellow + green",
+			"webhookId": "469c4b49-67b6-4ffc-a45d-6b5182dd5b8a",
+			"credentials": {
+				"microsoftOutlookOAuth2Api": {
+					"id": "REPLACE_OUTLOOK_CREDENTIAL",
+					"name": "Microsoft Outlook account"
+				}
+			}
+		},
+		{
+			"parameters": {
+				"operation": "update",
+				"messageId": {
+					"__rl": true,
+					"value": "={{ $('Get inbox messages').item.json.id }}",
+					"mode": "id"
+				},
+				"updateFields": {
+					"categories": ["Green category"]
+				}
+			},
+			"type": "n8n-nodes-base.microsoftOutlook",
+			"typeVersion": 2,
+			"position": [720, 260],
+			"id": "ae4e72ef-a221-4bf8-b5b0-214bc4801732",
+			"name": "Mark message green",
+			"webhookId": "3bbe9c2f-3380-4a94-a0ea-05621687497d",
+			"credentials": {
+				"microsoftOutlookOAuth2Api": {
+					"id": "REPLACE_OUTLOOK_CREDENTIAL",
+					"name": "Microsoft Outlook account"
+				}
+			}
+		}
+	],
+	"pinData": {},
+	"connections": {
+		"Schedule Trigger": {
+			"main": [
+				[
+					{
+						"node": "Set Config",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Set Config": {
+			"main": [
+				[
+					{
+						"node": "Get inbox messages",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Get inbox messages": {
+			"main": [
+				[
+					{
+						"node": "Run invoice extraction sub-workflow",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Run invoice extraction sub-workflow": {
+			"main": [
+				[
+					{
+						"node": "Has errors?",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Extract error",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Has errors?": {
+			"main": [
+				[
+					{
+						"node": "Send error email",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Supplier/account/tax key set?",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Extract error": {
+			"main": [
+				[
+					{
+						"node": "Send error email",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Send error email": {
+			"main": [
+				[
+					{
+						"node": "Mark message red",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		},
+		"Supplier/account/tax key set?": {
+			"main": [
+				[
+					{
+						"node": "Mark message yellow + green",
+						"type": "main",
+						"index": 0
+					}
+				],
+				[
+					{
+						"node": "Mark message green",
+						"type": "main",
+						"index": 0
+					}
+				]
+			]
+		}
+	},
+	"active": false,
+	"settings": {
+		"executionOrder": "v1",
+		"binaryMode": "separate",
+		"availableInMCP": false
+	},
+	"meta": {
+		"templateCredsSetupCompleted": true
+	},
+	"tags": []
+}
