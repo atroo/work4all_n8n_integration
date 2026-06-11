@@ -412,9 +412,9 @@
 		},
 		{
 			"parameters": {
-				"content": "## work4all AI backend\nSends the attachments to the work4all AI backend and returns the structured invoice JSON. Uses the **work4all** credential — no separate AI credential needed.",
-				"height": 200,
-				"width": 320,
+				"content": "## work4all AI backend\nSends the attachments to the work4all AI backend and returns the structured invoice JSON. Uses the **work4all** credential — no separate AI credential needed.\n\nℹ️ **Extraction Endpoint URL** is preset to the production endpoint. Leave it as-is in production — only change it for local testing or another environment (e.g. `http://host.docker.internal:8003/...`).",
+				"height": 280,
+				"width": 360,
 				"color": 7
 			},
 			"type": "n8n-nodes-base.stickyNote",

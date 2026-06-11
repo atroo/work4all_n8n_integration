@@ -1,6 +1,19 @@
 import { INodeProperties } from 'n8n-workflow';
 
+export const DEFAULT_EXTRACTION_URL =
+	'https://n8n-api.clanker.work4allcloud.de/invoice_information_extraction';
+
 export const extractInvoiceDataDescription: INodeProperties[] = [
+	{
+		displayName: 'Extraction Endpoint URL',
+		name: 'extractionUrl',
+		type: 'string',
+		default: DEFAULT_EXTRACTION_URL,
+		required: true,
+		displayOptions: { show: { operation: ['extractInvoiceData'] } },
+		description:
+			'URL of the work4all AI extraction backend. Defaults to the production endpoint; override it only for local testing or a different environment.',
+	},
 	{
 		displayName: 'Attachments',
 		name: 'extractAttachments',

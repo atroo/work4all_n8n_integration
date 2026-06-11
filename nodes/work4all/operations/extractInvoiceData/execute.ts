@@ -2,11 +2,12 @@ import { IExecuteFunctions, NodeApiError, NodeOperationError } from 'n8n-workflo
 
 import { getClient } from '../../auth';
 import { MANDANT_HEADER, getMandant } from '../../request';
+import { DEFAULT_EXTRACTION_URL } from './description';
 
 // The AI extraction backend is the same for every tenant. The target work4all
 // instance is selected via the x-work4all-apiurl / x-work4all-mandant headers,
-// using the values from the configured work4allOAuth2Api credential.
-const EXTRACTION_URL = 'https://n8n-api.clanker.work4allcloud.de/invoice_information_extraction';
+// using the values from the configured work4allOAuth2Api credential. The endpoint
+// URL is configurable on the node (defaults to DEFAULT_EXTRACTION_URL).
 const APIURL_HEADER = 'x-work4all-apiurl';
 
 function resolveBinaryKeys(ctx: IExecuteFunctions, itemIndex: number): string[] {
@@ -69,6 +70,9 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 
 		const { baseUrl } = await getClient(this);
 		const mandant = getMandant(this, itemIndex);
+		const extractionUrl =
+			(this.getNodeParameter('extractionUrl', itemIndex, DEFAULT_EXTRACTION_URL) as string)?.trim() ||
+			DEFAULT_EXTRACTION_URL;
 
 		// Return the backend response as-is. Normalization (null stripping, found_invoice
 		// coercion) is handled downstream by the shared parser so the LLM and backend
@@ -78,7 +82,7 @@ export async function execute(this: IExecuteFunctions, itemIndex: number): Promi
 			'work4allOAuth2Api',
 			{
 				method: 'POST',
-				url: EXTRACTION_URL,
+				url: extractionUrl,
 				headers: {
 					[APIURL_HEADER]: baseUrl,
 					[MANDANT_HEADER]: mandant,

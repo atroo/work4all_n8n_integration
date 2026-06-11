@@ -8,12 +8,13 @@
 
 import type { IBinaryData } from 'n8n-workflow';
 
+import { DEFAULT_EXTRACTION_URL } from '../../nodes/work4all/operations/extractInvoiceData/description';
 import { execute } from '../../nodes/work4all/operations/extractInvoiceData/execute';
 import { MANDANT_HEADER } from '../../nodes/work4all/request';
 import { createMockExecuteFunctions, MockBinaryEntry } from '../helpers/createMockExecuteFunctions';
 
-const EXTRACTION_URL =
-	'https://n8n-api.clanker.work4allcloud.de/invoice_information_extraction';
+// A custom endpoint to prove the node uses the configurable extractionUrl parameter.
+const EXTRACTION_URL = 'http://localhost:8000/invoice_information_extraction';
 const APIURL_HEADER = 'x-work4all-apiurl';
 const BASE_URL = 'https://backend-dev.work4alltest.work4allcloud.de';
 
@@ -44,7 +45,12 @@ describe('extractInvoiceData (unit)', () => {
 
 		const mock = createMockExecuteFunctions({
 			credentials,
-			parameters: { operation: 'extractInvoiceData', extractAttachments: 'all', mandant: '7' },
+			parameters: {
+				operation: 'extractInvoiceData',
+				extractAttachments: 'all',
+				mandant: '7',
+				extractionUrl: EXTRACTION_URL,
+			},
 			binaryData: {
 				attachment_0: binaryEntry('invoice.pdf', 'application/pdf'),
 				attachment_1: binaryEntry('note.xml', 'application/xml'),
@@ -106,6 +112,23 @@ describe('extractInvoiceData (unit)', () => {
 			relevantAttachmentKeys: [],
 			invoiceData: {},
 		});
+	});
+
+	it('falls back to the default endpoint URL when extractionUrl is not set', async () => {
+		let captured: Record<string, unknown> | undefined;
+
+		const mock = createMockExecuteFunctions({
+			credentials,
+			parameters: { operation: 'extractInvoiceData', extractAttachments: 'all' },
+			binaryData: { attachment_0: binaryEntry('invoice.pdf', 'application/pdf') },
+			httpRequestWithAuthentication: async (_credType, requestOpts) => {
+				captured = requestOpts;
+				return SAMPLE_RESPONSE;
+			},
+		});
+
+		await execute.call(mock, 0);
+		expect(captured?.['url']).toBe(DEFAULT_EXTRACTION_URL);
 	});
 
 	it('throws when there are no attachments to send', async () => {
