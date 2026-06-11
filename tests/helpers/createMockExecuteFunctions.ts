@@ -61,6 +61,15 @@ export function createMockExecuteFunctions(opts: MockOptions): IExecuteFunctions
 		getCredentials: async () => opts.credentials,
 		getNode: () => MOCK_NODE,
 
+		getInputData: () => {
+			const binary = opts.binaryData
+				? Object.fromEntries(
+						Object.entries(opts.binaryData).map(([key, entry]) => [key, entry.data]),
+					)
+				: undefined;
+			return [{ json: {}, ...(binary ? { binary } : {}) }];
+		},
+
 		getNodeParameter: (name: string, _itemIndex: number, fallback?: unknown) => {
 			const value = opts.parameters[name as string];
 			return value !== undefined ? value : (fallback ?? undefined);

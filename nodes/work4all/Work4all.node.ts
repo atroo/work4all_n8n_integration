@@ -7,7 +7,7 @@ import {
 } from 'n8n-workflow';
 
 import { getMandanten } from './loadOptions';
-import { createIncomingInvoice, customer, project } from './operations';
+import { createIncomingInvoice, customer, extractInvoiceData, project } from './operations';
 import { mandantDescription } from './properties/mandant';
 
 const customerOps = ['createCustomer', 'getCustomer', 'getManyCustomers', 'updateCustomer'];
@@ -48,6 +48,12 @@ export class Work4all implements INodeType {
 						description: 'Create a new incoming invoice in work4all',
 					},
 					{
+						name: 'Extract Invoice Data',
+						value: 'extractInvoiceData',
+						action: 'Extract invoice data from attachments',
+						description: 'Send attachments to the work4all AI backend and get structured invoice data',
+					},
+					{
 						name: 'Get Customer',
 						value: 'getCustomer',
 						action: 'Get a customer',
@@ -81,6 +87,7 @@ export class Work4all implements INodeType {
 				default: 'createIncomingInvoice',
 			},
 			...createIncomingInvoice.description,
+			...extractInvoiceData.description,
 			...customer.description,
 			...project.description,
 		],
@@ -102,6 +109,9 @@ export class Work4all implements INodeType {
 
 				if (operation === 'createIncomingInvoice') {
 					const result = await createIncomingInvoice.execute.call(this, i);
+					returnData.push({ json: result as IDataObject });
+				} else if (operation === 'extractInvoiceData') {
+					const result = await extractInvoiceData.execute.call(this, i);
 					returnData.push({ json: result as IDataObject });
 				} else if (customerOps.includes(operation)) {
 					const result = await customer.execute.call(this, i);

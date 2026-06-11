@@ -1,6 +1,6 @@
 {
 	"name": "work4all n8n integration",
-	"image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+	"image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
 	"features": {
 		"ghcr.io/devcontainers/features/git:1": {}
 	},
@@ -8,7 +8,9 @@
 		"source=work4all-n8n-dev,target=/home/node/.n8n-node-cli,type=volume",
 		"source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=cached"
 	],
-	"forwardPorts": [5678],
+	"forwardPorts": [
+		5678
+	],
 	"portsAttributes": {
 		"5678": {
 			"label": "n8n (npm run dev)",
