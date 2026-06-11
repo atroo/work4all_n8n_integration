@@ -112,7 +112,10 @@ export class Work4all implements INodeType {
 					returnData.push({ json: result as IDataObject });
 				} else if (operation === 'extractInvoiceData') {
 					const result = await extractInvoiceData.execute.call(this, i);
-					returnData.push({ json: result as IDataObject });
+					// Forward the incoming binary attachments so downstream nodes can still
+					// access them via $binary (the extraction call itself returns only JSON).
+					const binary = items[i].binary;
+					returnData.push({ json: result as IDataObject, ...(binary && { binary }) });
 				} else if (customerOps.includes(operation)) {
 					const result = await customer.execute.call(this, i);
 					returnData.push({ json: result as IDataObject });
