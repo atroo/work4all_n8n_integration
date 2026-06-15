@@ -42,7 +42,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3744,
+        3760,
         3488
       ],
       "id": "6abcaaa7-cb8f-456d-be55-9e9d446cc269",
@@ -596,7 +596,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "c2094ada-e367-4a60-ae7a-cb71af1d1816",
+  "versionId": "7e36bf65-2291-4b9e-a1c1-33cf8659785b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "296be6635839d6898d9738c77c7973f94245430cfacaa9ab6123dfbd23a17154"
