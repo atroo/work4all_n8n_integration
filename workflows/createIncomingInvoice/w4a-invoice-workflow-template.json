@@ -3,65 +3,65 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Create a work4all incoming invoice from email attachments using AI (EN)\n\nThis is a **sub-workflow**. It is called by a parent workflow (e.g. the companion *Create work4all incoming invoices from Outlook inbox emails* template) with a single email item that carries its attachments as binary data. The attachments are read by AI, structured invoice data is extracted, and the **work4all** node books the incoming invoice with the original files attached.\n\n## Two extraction modes (configurable)\nThe **Extraction config** node decides how invoice data is extracted:\n- **`backend`** (default) — sends the attachments to the **work4all AI backend**. Authentication and the target work4all instance come from the **work4all** credential, so no extra AI credential is needed.\n- **`llm`** — sends the attachments to your own **OpenAI-compatible** endpoint (*Call LLM* node). Use this if you want to bring your own model/provider.\n\nBoth modes return the same structured shape, so the rest of the workflow is identical.\n\n## How to set up\n1. Add your **work4all** credential.\n2. Leave **Extraction config** at `backend` to use the work4all AI backend (recommended), or set it to `llm` and add an **OpenAI-compatible** credential on the *Call LLM* node.\n3. Call this workflow from a parent that supplies the email + attachments.\n\n## Requirements\n- A work4all account and the verified `n8n-nodes-work4all` node\n- For `llm` mode only: an OpenAI-compatible chat-completions endpoint\n\n---\n\n## Beschreibung (DE)\n\nDies ist ein **Sub-Workflow**. Er wird von einem übergeordneten Workflow aufgerufen und erhält eine einzelne E-Mail mit ihren Anhängen als Binärdaten. Die Anhänge werden per KI ausgelesen, die strukturierten Rechnungsdaten extrahiert, und der **work4all**-Knoten bucht die Eingangsrechnung samt Originaldateien.\n\n### Zwei Extraktionsmodi (konfigurierbar)\nDer Knoten **Extraction config** legt fest, wie die Rechnungsdaten extrahiert werden:\n- **`backend`** (Standard) — sendet die Anhänge an das **work4all-KI-Backend**. Authentifizierung und Ziel-Instanz kommen aus dem **work4all**-Credential, kein zusätzliches KI-Credential nötig.\n- **`llm`** — sendet die Anhänge an deinen eigenen **OpenAI-kompatiblen** Endpunkt (*Call LLM*).\n\nBeide Modi liefern dieselbe Struktur zurück; der restliche Workflow ist identisch.\n\n### Einrichtung\n1. **work4all**-Credential hinzufügen.\n2. **Extraction config** auf `backend` lassen (empfohlen) oder auf `llm` setzen und ein **OpenAI-kompatibles** Credential am *Call LLM*-Knoten hinterlegen.\n3. Aus einem übergeordneten Workflow aufrufen, der E-Mail + Anhänge liefert.",
-        "height": 1376,
-        "width": 440
+        "content": "## Create a work4all incoming invoice from email attachments using AI\n\nThis **sub-workflow** is called by a parent workflow with one email item whose attachments are passed as binary data. The attachments are read by AI, structured invoice data is extracted, and the **work4all** node books the incoming invoice with the original files attached.\n\n### How it works\n1. Keeps only emails that carry a readable PDF / XML / JSON attachment.\n2. Extracts invoice data in one of two modes (**Extraction config**):\n   - **`backend`** (default) — work4all AI backend, uses the **work4all** credential.\n   - **`llm`** — your own **OpenAI-compatible** model (*Call LLM*).\n3. Normalises the result, books the incoming invoice and attaches the files.\n\n### Setup\n1. Add your **work4all** credential.\n2. Leave **Extraction config** at `backend` (recommended), or set it to `llm` and add an **OpenAI-compatible** credential on *Call LLM*.\n3. Call this workflow from a parent that supplies the email + attachments.\n\n### Customization\n- Switch provider/model in *Call LLM* and the `MODEL` constant in *Build LLM messages*.\n- The `llm` model must support **PDF / file input**.\n\nRequires a work4all account and the verified `n8n-nodes-work4all` node.",
+        "height": 680,
+        "width": 460
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2064,
-        2592
+        3328,
+        3824
       ],
-      "id": "341730bf-77c6-4157-80f8-e3cdefb7f29f",
+      "id": "ae5bffef-7c79-4b6e-99a3-d73f77662e71",
       "name": "Sticky Note - Description"
     },
     {
       "parameters": {
-        "content": "## Expected input (EN)\nThis workflow is triggered by a parent via **Execute Workflow**. Each incoming item must contain:\n- the email attachments as **binary** data\n- `id` (message id) and `receivedDateTime` in JSON\n\n---\n\n## Erwartete Eingabe (DE)\nDieser Workflow wird von einem übergeordneten Workflow über **Execute Workflow** aufgerufen. Jedes eingehende Item muss enthalten:\n- die E-Mail-Anhänge als **Binärdaten**\n- `id` (Nachrichten-ID) und `receivedDateTime` im JSON",
-        "height": 332,
-        "width": 360,
-        "color": 5
+        "content": "## 1 · Input & validation\nReceives the email from the parent workflow and keeps only items that carry a readable PDF / XML / JSON attachment.",
+        "height": 368,
+        "width": 720,
+        "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2544,
-        2976
+        3872,
+        4432
       ],
-      "id": "f75e371c-04be-489d-ac39-e3b595ca99e0",
+      "id": "94e503a9-3044-401f-85b6-5f8764d50d28",
       "name": "Sticky Note - Input"
     },
     {
       "parameters": {
-        "content": "## LLM extraction — optional path (EN)\nUsed only when **extractionMode = `llm`**. Sends the PDF / XML attachments to an **OpenAI-compatible** chat-completions endpoint and parses the structured invoice JSON.\n\n**Provider configuration** — the *Call LLM* node is preconfigured for the **Requesty EU router** and works with any OpenAI-compatible endpoint. Change the **URL** in *Call LLM* and the **model** at the top of *Build LLM messages* to use another provider.\n\n**Endpoint examples**\n- **OpenAI:** `https://api.openai.com/v1/chat/completions` — e.g. `gpt-4o`\n- **Anthropic (OpenAI-compatible):** `https://api.anthropic.com/v1/chat/completions` — e.g. `claude-sonnet-4-6`\n- **Requesty (default):** `https://router.eu.requesty.ai/v1/chat/completions` — e.g. `policy/EU-Sonnet-4-6`\n\n⚠️ The selected model must support **PDF / file input**.\n\n---\n\n## LLM-Extraktion — optionaler Pfad (DE)\nWird nur verwendet, wenn **extractionMode = `llm`**. Sendet die PDF-/XML-Anhänge an einen **OpenAI-kompatiblen** Chat-Completions-Endpunkt und liest das strukturierte Rechnungs-JSON aus.\n\n**Provider-Konfiguration** — der Knoten *Call LLM* ist für den **Requesty-EU-Router** vorkonfiguriert und funktioniert mit jedem OpenAI-kompatiblen Endpunkt. Ändere die **URL** in *Call LLM* und das **Modell** oben in *Build LLM messages*, um einen anderen Anbieter zu nutzen.\n\n**Endpunkt-Beispiele**\n- **OpenAI:** `https://api.openai.com/v1/chat/completions` — z. B. `gpt-4o`\n- **Anthropic (OpenAI-kompatibel):** `https://api.anthropic.com/v1/chat/completions` — z. B. `claude-sonnet-4-6`\n- **Requesty (Standard):** `https://router.eu.requesty.ai/v1/chat/completions` — z. B. `policy/EU-Sonnet-4-6`\n\n⚠️ Das gewählte Modell muss **PDF-/Datei-Eingabe** unterstützen.",
-        "height": 864,
-        "width": 480,
+        "content": "## 3 · Extract invoice data\nBoth modes read the attachments and return the same structured invoice JSON — via the work4all AI backend or an OpenAI-compatible LLM (*Build LLM messages* → *Call LLM*).",
+        "height": 492,
+        "width": 470,
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3760,
-        3488
+        5264,
+        4128
       ],
-      "id": "6abcaaa7-cb8f-456d-be55-9e9d446cc269",
+      "id": "6d00d5d9-5fdb-4b27-96a9-09934624c199",
       "name": "Sticky Note - Extract"
     },
     {
       "parameters": {
-        "content": "## Book in work4all (EN)\nNormalise the data (currency, dates), then create the incoming invoice and attach the original files.\n\n---\n\n## In work4all buchen (DE)\nNormalisiert die Daten (Währung, Datumsangaben), erstellt dann die Eingangsrechnung und hängt die Originaldateien an.",
-        "height": 184,
-        "width": 560,
+        "content": "## 5 · Book in work4all\nNormalises currency and dates, creates the incoming invoice in work4all and attaches the original files.",
+        "height": 312,
+        "width": 720,
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        4608,
-        2800
+        6512,
+        4240
       ],
-      "id": "c06c7c66-9315-4846-a386-9d04dca06ecb",
+      "id": "5d0640ea-8437-4a34-9ee1-acfa7907bcf9",
       "name": "Sticky Note - Book"
     },
     {
@@ -71,10 +71,10 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        2592,
-        3328
+        3920,
+        4624
       ],
-      "id": "42c86b62-447d-415e-ab34-0fe3f7cc8bf3",
+      "id": "0c59f157-e044-462c-a096-e26a9f2dac3a",
       "name": "When called by parent workflow"
     },
     {
@@ -106,10 +106,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        2816,
-        3328
+        4144,
+        4624
       ],
-      "id": "7585bbde-ad0a-419a-905c-b69135b5e2d6",
+      "id": "798b2240-e938-43ab-bdaa-8889476369a3",
       "name": "Has attachments?"
     },
     {
@@ -120,10 +120,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3728,
-        3200
+        5312,
+        4448
       ],
-      "id": "9ffa3f41-cfc1-4102-8f83-188cc0de7257",
+      "id": "76a69b0c-5791-4894-8941-1987e96bf138",
       "name": "Build LLM messages"
     },
     {
@@ -154,10 +154,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        3056,
-        3232
+        4384,
+        4528
       ],
-      "id": "859e7ba1-b32f-4324-bbbf-7458ba8f4b30",
+      "id": "26087643-0935-40ae-99b5-043ed6ed005b",
       "name": "Has readable attachment?"
     },
     {
@@ -183,10 +183,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        3952,
-        3200
+        5536,
+        4448
       ],
-      "id": "ec9685f1-b0f4-4520-82e5-8d66bcfcf031",
+      "id": "f428890d-57b2-44f2-8dfb-75da7b87adf2",
       "name": "Call LLM"
     },
     {
@@ -197,10 +197,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4176,
-        3104
+        5936,
+        4352
       ],
-      "id": "768ab93c-3f61-4f04-8832-5f5ba075c036",
+      "id": "c2b12987-7c71-4668-9092-66e1a696a424",
       "name": "Parse extraction result"
     },
     {
@@ -231,10 +231,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        4400,
-        3104
+        6160,
+        4352
       ],
-      "id": "c18c4e49-9ee5-41bf-acac-f45482e676c7",
+      "id": "57096ad9-32f6-4e6f-945c-4412a178aed6",
       "name": "Has invoice?"
     },
     {
@@ -245,10 +245,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4624,
-        3056
+        6528,
+        4336
       ],
-      "id": "9aacf834-b894-44f0-8516-f83aecc3b61a",
+      "id": "ff2c7e66-caf2-4bd9-b8a9-b383a2f7f766",
       "name": "Filter attachments & normalize"
     },
     {
@@ -261,10 +261,10 @@
       "type": "n8n-nodes-work4all.work4all",
       "typeVersion": 1,
       "position": [
-        4848,
-        3056
+        6752,
+        4336
       ],
-      "id": "1b2c79c2-84eb-44b7-ba55-9d5ba514effd",
+      "id": "c6ffbd6d-4b71-4142-b7f0-6f09ca902b0e",
       "name": "Create incoming invoice"
     },
     {
@@ -275,10 +275,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5072,
-        3056
+        6976,
+        4336
       ],
-      "id": "bac50786-4e7e-4139-b7e5-88dde42d247b",
+      "id": "abcf4572-33d9-4635-a2bc-8722626a4094",
       "name": "Format work4all result"
     },
     {
@@ -286,10 +286,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        4848,
-        3440
+        6736,
+        4720
       ],
-      "id": "0ed0669b-22f5-45b9-875c-53185f429233",
+      "id": "0bfde39e-4847-4286-829b-031b9603ccc7",
       "name": "No invoice - skip"
     },
     {
@@ -300,10 +300,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5088,
-        3440
+        6976,
+        4720
       ],
-      "id": "edb26675-dd44-4c4e-9d95-f57e9a8e59bc",
+      "id": "d2321b43-cc23-48ec-8dd4-3105a34b322d",
       "name": "Build result (no invoice)"
     },
     {
@@ -326,10 +326,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3280,
-        3104
+        4704,
+        4352
       ],
-      "id": "27d2a0cb-a1a4-4be5-b173-1746e4b81150",
+      "id": "321f3a36-c04c-48bf-b005-5d4488e7fda4",
       "name": "Extraction config"
     },
     {
@@ -359,11 +359,12 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        3504,
-        3104
+        4928,
+        4352
       ],
-      "id": "6d3cbd26-4b1e-46af-b78e-0381766fb2ac",
-      "name": "Use work4all AI backend?"
+      "id": "003567ac-2078-4104-ae95-96700e012214",
+      "name": "Use work4all AI backend?",
+      "disabled": true
     },
     {
       "parameters": {
@@ -372,10 +373,10 @@
       "type": "n8n-nodes-work4all.work4all",
       "typeVersion": 1,
       "position": [
-        3952,
-        3008
+        5536,
+        4256
       ],
-      "id": "c447c99a-8426-4f54-9a02-b74f08abee60",
+      "id": "5ee82373-4cef-4cb8-b3c2-a30ed1ee8bb7",
       "name": "Extract invoice data",
       "credentials": {
         "work4allOAuth2Api": {
@@ -386,35 +387,51 @@
     },
     {
       "parameters": {
-        "content": "## Extraction gate & mode (EN)\n**Has readable attachment?** keeps only emails with a PDF / XML / JSON attachment (applies to *both* modes).\n\n**Extraction config** → set `extractionMode`:\n- **`backend`** → work4all AI backend (no extra credential)\n- **`llm`** → your own OpenAI-compatible model\n\nBoth paths merge into **Parse extraction result**, which normalizes either output into the same structure.\n\n---\n\n## Extraktions-Gate & Modus (DE)\n**Has readable attachment?** lässt nur E-Mails mit PDF-/XML-/JSON-Anhang durch (gilt für *beide* Modi).\n\n**Extraction config** → `extractionMode` setzen:\n- **`backend`** → work4all-KI-Backend (kein zusätzliches Credential)\n- **`llm`** → dein eigenes OpenAI-kompatibles Modell\n\nBeide Pfade münden in **Parse extraction result**, das beide Ausgaben in dieselbe Struktur normalisiert.",
-        "height": 428,
-        "width": 500,
-        "color": 5
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        2944,
-        2656
-      ],
-      "id": "290bce26-6e68-48df-b1f3-eb1788293e97",
-      "name": "Sticky Note - Extraction mode"
-    },
-    {
-      "parameters": {
-        "content": "## work4all AI backend (EN)\nSends the attachments to the work4all AI backend and returns the structured invoice JSON. Uses the **work4all** credential — no separate AI credential needed.\n\nℹ️ **Extraction Endpoint URL** is preset to the production endpoint. Leave it as-is in production — only change it for local testing or another environment (e.g. `http://host.docker.internal:8003/...`).\n\n---\n\n## work4all-KI-Backend (DE)\nSendet die Anhänge an das work4all-KI-Backend und gibt das strukturierte Rechnungs-JSON zurück. Nutzt das **work4all**-Credential — kein separates KI-Credential nötig.\n\nℹ️ Die **Extraction Endpoint URL** ist auf den Produktions-Endpunkt voreingestellt. In der Produktion so lassen — nur für lokale Tests oder eine andere Umgebung ändern (z. B. `http://host.docker.internal:8003/...`).",
-        "height": 472,
-        "width": 360,
+        "content": "## 2 · Choose extraction mode\nSet `extractionMode` in **Extraction config**: `backend` (work4all AI backend) or `llm` (your own OpenAI-compatible model).",
+        "height": 336,
+        "width": 446,
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3840,
-        2512
+        4672,
+        4224
       ],
-      "id": "7705c212-dca0-4ba0-83aa-1156fb947657",
-      "name": "Sticky Note - Backend"
+      "id": "73ec4480-7594-44fe-adee-bd489d622fb8",
+      "name": "Sticky Note - Extraction mode"
+    },
+    {
+      "parameters": {
+        "content": "## 4 · Parse & check\nNormalises either output into the same shape and checks whether an invoice was found. If not, booking is skipped.",
+        "height": 340,
+        "width": 420,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5920,
+        4240
+      ],
+      "id": "e94df569-9888-415a-9702-13acc7b34fc4",
+      "name": "Sticky Note - Parse"
+    },
+    {
+      "parameters": {
+        "content": "## 6 · No invoice\nItems without a usable invoice end here and return a simple skipped result.",
+        "height": 256,
+        "width": 520,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6688,
+        4624
+      ],
+      "id": "032731e5-0764-45dd-8f15-26b1e5553d99",
+      "name": "Sticky Note - No invoice"
     }
   ],
   "pinData": {},
@@ -596,7 +613,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "7e36bf65-2291-4b9e-a1c1-33cf8659785b",
+  "versionId": "f10951a6-27e6-482c-a921-cf73b0e9b5e6",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "296be6635839d6898d9738c77c7973f94245430cfacaa9ab6123dfbd23a17154"
