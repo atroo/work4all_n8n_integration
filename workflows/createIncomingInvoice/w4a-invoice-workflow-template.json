@@ -3,33 +3,33 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Create a work4all incoming invoice from email attachments using AI\n\nThis **sub-workflow** is called by a parent workflow with one email item whose attachments are passed as binary data. The attachments are read by AI, structured invoice data is extracted, and the **work4all** node books the incoming invoice with the original files attached.\n\n### How it works\n1. Keeps only emails that carry a readable PDF / XML / JSON attachment.\n2. Extracts invoice data in one of two modes (**Extraction config**):\n   - **`backend`** (default) — work4all AI backend, uses the **work4all** credential.\n   - **`llm`** — your own **OpenAI-compatible** model (*Call LLM*).\n3. Normalises the result, books the incoming invoice and attaches the files.\n\n### Setup\n1. Add your **work4all** credential.\n2. Leave **Extraction config** at `backend` (recommended), or set it to `llm` and add an **OpenAI-compatible** credential on *Call LLM*.\n3. Call this workflow from a parent that supplies the email + attachments.\n\n### Customization\n- Switch provider/model in *Call LLM* and the `MODEL` constant in *Build LLM messages*.\n- The `llm` model must support **PDF / file input**.\n\nRequires a work4all account and the verified `n8n-nodes-work4all` node.",
+        "content": "## Create a work4all incoming invoice from email attachments using AI\n\nThis **sub-workflow** is called by a parent workflow with one email item whose attachments are passed as binary data. The attachments are read by AI, structured invoice data is extracted, and the **work4all** node books the incoming invoice with the original files attached.\n\n### How it works\n1. Keeps only emails that carry a readable PDF / XML / JSON attachment.\n2. Extracts invoice data in one of two modes (**Extraction config**):\n   - **`backend`** (default) — work4all AI backend, uses the **work4all** credential.\n   - **`llm`** — your own **OpenAI-compatible** model (*Call LLM*).\n3. Normalises the result, books the incoming invoice and attaches the files.\n\n### Setup\n1. Add your **work4all** credential.\n2. Call this workflow from a parent that supplies the email + attachments.\n\n### Customization\n- **Extraction mode** — default is `backend` (work4all AI). For your own model, set **Extraction config** to `llm` and add an **OpenAI-compatible** credential on *Call LLM*.\n- Switch provider/model in *Call LLM* and the `MODEL` constant in *Build LLM messages* (must support **PDF / file input**).\n\nRequires a work4all account and the verified `n8n-nodes-work4all` node.",
         "height": 680,
         "width": 460
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3328,
-        3824
+        12368,
+        7072
       ],
-      "id": "ae5bffef-7c79-4b6e-99a3-d73f77662e71",
+      "id": "e66e1fd3-d063-4ee3-9c6f-62cf8b3e0776",
       "name": "Sticky Note - Description"
     },
     {
       "parameters": {
         "content": "## 1 · Input & validation\nReceives the email from the parent workflow and keeps only items that carry a readable PDF / XML / JSON attachment.",
         "height": 368,
-        "width": 720,
+        "width": 704,
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3872,
-        4432
+        12912,
+        7680
       ],
-      "id": "94e503a9-3044-401f-85b6-5f8764d50d28",
+      "id": "78f97643-5f70-480a-b97b-026145b05ebe",
       "name": "Sticky Note - Input"
     },
     {
@@ -42,26 +42,26 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        5264,
-        4128
+        14304,
+        7376
       ],
-      "id": "6d00d5d9-5fdb-4b27-96a9-09934624c199",
+      "id": "637606f7-39aa-4f71-99eb-988f55e33661",
       "name": "Sticky Note - Extract"
     },
     {
       "parameters": {
         "content": "## 5 · Book in work4all\nNormalises currency and dates, creates the incoming invoice in work4all and attaches the original files.",
         "height": 312,
-        "width": 720,
+        "width": 736,
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        6512,
-        4240
+        15520,
+        7488
       ],
-      "id": "5d0640ea-8437-4a34-9ee1-acfa7907bcf9",
+      "id": "455c54ab-3f25-4139-a6d0-ae08ce274bf6",
       "name": "Sticky Note - Book"
     },
     {
@@ -71,10 +71,10 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        3920,
-        4624
+        12960,
+        7872
       ],
-      "id": "0c59f157-e044-462c-a096-e26a9f2dac3a",
+      "id": "8dac390a-f06a-4a85-bb4f-130559fc4448",
       "name": "When called by parent workflow"
     },
     {
@@ -106,10 +106,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        4144,
-        4624
+        13184,
+        7872
       ],
-      "id": "798b2240-e938-43ab-bdaa-8889476369a3",
+      "id": "592be2b9-c567-4474-b715-ecbd62727f5a",
       "name": "Has attachments?"
     },
     {
@@ -120,10 +120,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5312,
-        4448
+        14352,
+        7696
       ],
-      "id": "76a69b0c-5791-4894-8941-1987e96bf138",
+      "id": "166ec2d0-b6a8-464c-b876-1ad81472a68c",
       "name": "Build LLM messages"
     },
     {
@@ -154,10 +154,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        4384,
-        4528
+        13424,
+        7776
       ],
-      "id": "26087643-0935-40ae-99b5-043ed6ed005b",
+      "id": "f656a11f-2883-48ac-8b73-3a9151cd4237",
       "name": "Has readable attachment?"
     },
     {
@@ -183,10 +183,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        5536,
-        4448
+        14576,
+        7696
       ],
-      "id": "f428890d-57b2-44f2-8dfb-75da7b87adf2",
+      "id": "9fc590c7-a747-4619-9612-df85a34d6bb7",
       "name": "Call LLM"
     },
     {
@@ -197,10 +197,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5936,
-        4352
+        14976,
+        7600
       ],
-      "id": "c2b12987-7c71-4668-9092-66e1a696a424",
+      "id": "416e69af-4831-4438-bc55-47645db328b4",
       "name": "Parse extraction result"
     },
     {
@@ -231,10 +231,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        6160,
-        4352
+        15200,
+        7600
       ],
-      "id": "57096ad9-32f6-4e6f-945c-4412a178aed6",
+      "id": "6ce97f81-cbb8-4c0d-af82-2f2ee828293c",
       "name": "Has invoice?"
     },
     {
@@ -245,10 +245,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6528,
-        4336
+        15568,
+        7584
       ],
-      "id": "ff2c7e66-caf2-4bd9-b8a9-b383a2f7f766",
+      "id": "a76861d5-716f-48d8-bf94-6174f511f99d",
       "name": "Filter attachments & normalize"
     },
     {
@@ -261,10 +261,10 @@
       "type": "n8n-nodes-work4all.work4all",
       "typeVersion": 1,
       "position": [
-        6752,
-        4336
+        15792,
+        7584
       ],
-      "id": "c6ffbd6d-4b71-4142-b7f0-6f09ca902b0e",
+      "id": "14556c93-cc8c-41bb-9b00-e2cd136406c0",
       "name": "Create incoming invoice"
     },
     {
@@ -275,10 +275,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6976,
-        4336
+        16016,
+        7584
       ],
-      "id": "abcf4572-33d9-4635-a2bc-8722626a4094",
+      "id": "b6f276dc-7eb3-4022-a8a2-53267f220c80",
       "name": "Format work4all result"
     },
     {
@@ -286,10 +286,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        6736,
-        4720
+        15776,
+        7968
       ],
-      "id": "0bfde39e-4847-4286-829b-031b9603ccc7",
+      "id": "30af0f13-15e8-482a-8209-a000b190baa3",
       "name": "No invoice - skip"
     },
     {
@@ -300,10 +300,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6976,
-        4720
+        16016,
+        7968
       ],
-      "id": "d2321b43-cc23-48ec-8dd4-3105a34b322d",
+      "id": "75dcd732-3065-4e5a-bba9-f87fdda02d50",
       "name": "Build result (no invoice)"
     },
     {
@@ -326,10 +326,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4704,
-        4352
+        13744,
+        7600
       ],
-      "id": "321f3a36-c04c-48bf-b005-5d4488e7fda4",
+      "id": "cc7f976e-5085-42ab-9a8e-7a78155009d3",
       "name": "Extraction config"
     },
     {
@@ -359,12 +359,11 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        4928,
-        4352
+        13968,
+        7600
       ],
-      "id": "003567ac-2078-4104-ae95-96700e012214",
-      "name": "Use work4all AI backend?",
-      "disabled": true
+      "id": "cc5a7d76-6063-4f73-a15e-3c4382b0bb8e",
+      "name": "Use work4all AI backend?"
     },
     {
       "parameters": {
@@ -373,10 +372,10 @@
       "type": "n8n-nodes-work4all.work4all",
       "typeVersion": 1,
       "position": [
-        5536,
-        4256
+        14576,
+        7504
       ],
-      "id": "5ee82373-4cef-4cb8-b3c2-a30ed1ee8bb7",
+      "id": "2c7e4d91-6af3-458a-9fa7-f4d32917b300",
       "name": "Extract invoice data",
       "credentials": {
         "work4allOAuth2Api": {
@@ -395,10 +394,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        4672,
-        4224
+        13712,
+        7472
       ],
-      "id": "73ec4480-7594-44fe-adee-bd489d622fb8",
+      "id": "147f7d49-6d33-4547-a819-86c90e39ca4a",
       "name": "Sticky Note - Extraction mode"
     },
     {
@@ -411,26 +410,26 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        5920,
-        4240
+        14928,
+        7488
       ],
-      "id": "e94df569-9888-415a-9702-13acc7b34fc4",
+      "id": "4e9262e1-c41b-481c-97d4-8678e1cd5810",
       "name": "Sticky Note - Parse"
     },
     {
       "parameters": {
         "content": "## 6 · No invoice\nItems without a usable invoice end here and return a simple skipped result.",
         "height": 256,
-        "width": 520,
+        "width": 488,
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        6688,
-        4624
+        15728,
+        7872
       ],
-      "id": "032731e5-0764-45dd-8f15-26b1e5553d99",
+      "id": "68c12587-e1d6-4efa-8be4-58b5403e4bb1",
       "name": "Sticky Note - No invoice"
     }
   ],
@@ -613,7 +612,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "f10951a6-27e6-482c-a921-cf73b0e9b5e6",
+  "versionId": "987ac2a4-e699-42e6-ba8b-35ccc0c4fbe7",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "296be6635839d6898d9738c77c7973f94245430cfacaa9ab6123dfbd23a17154"
