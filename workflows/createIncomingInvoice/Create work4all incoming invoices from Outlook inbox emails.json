@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Automatically create work4all invoices from Outlook inbox emails\n\nPolls an Outlook folder for new supplier emails and turns their invoice attachments into incoming invoices in **work4all**. AI extraction and booking are handled by the companion sub-workflow; this workflow handles scheduling, fetching, error notifications and Outlook categorisation. Built for teams using **work4all** and **Microsoft Outlook** that want to stop entering supplier invoices by hand.\n\n### How it works\n1. A schedule trigger fetches messages from a chosen Outlook folder that aren't yet categorised red or green.\n2. Each message is passed to the **invoice extraction sub-workflow**, which creates the work4all incoming invoice.\n3. The email is categorised by outcome: **green** = booked, **yellow + green** = booked but please review (supplier / account / tax key was set automatically), **red** = error (a notification email is sent).\n\n### Setup\n1. Import the companion template **\"Create a work4all incoming invoice from email attachments using AI\"**.\n2. In *Run invoice extraction sub-workflow*, select that imported workflow.\n3. Add your **Microsoft Outlook** credential.\n4. In *Set error recipients*, enter the error-notification recipient(s).\n5. In *Get inbox messages*, choose the folder to monitor.\n6. Make sure the **Red / Green / Yellow** categories exist in your mailbox.\n\n### Customization\n- Change the polling interval on *Poll inbox every minute*.\n- Adjust which Outlook categories are used.\n\nRequires a Microsoft Outlook account, the companion sub-workflow and the verified `n8n-nodes-work4all` node.",
+        "content": "## Automatically create work4all invoices from Outlook inbox emails\n\nPolls an Outlook folder for new supplier emails and turns their invoice attachments into incoming invoices in **work4all**. AI extraction and booking are handled by a built-in extraction sub-workflow on the same canvas; the main flow handles scheduling, fetching, error notifications and Outlook categorisation. Built for teams using **work4all** and **Microsoft Outlook** that want to stop entering supplier invoices by hand.\n\n### How it works\n1. A schedule trigger fetches messages from a chosen Outlook folder that aren't yet categorised red or green.\n2. Each message is passed to the built-in **invoice extraction sub-workflow**, which creates the work4all incoming invoice.\n3. The email is categorised by outcome: **green** = booked, **yellow + green** = booked but please review (supplier / account / tax key was set automatically), **red** = error (a notification email is sent).\n\n### Setup\n1. Add your **Microsoft Outlook** credential (inbox + categorisation nodes).\n2. Add your **work4all** credential (*Extract invoice data* + *Create incoming invoice*).\n3. In *Get inbox messages*, choose the folder to monitor.\n4. In *Set error recipients*, enter the error-notification recipient(s).\n5. Make sure the **Red / Green / Yellow** categories exist in your mailbox.\n\n### Customization\n- Change the polling interval on *Poll inbox every minute*.\n- Adjust which Outlook categories are used.\n\nRequires Microsoft Outlook and work4all accounts, plus the verified `n8n-nodes-work4all` node.",
         "height": 760,
         "width": 460
       },
@@ -50,7 +50,7 @@
     },
     {
       "parameters": {
-        "content": "## 2. Extract & book\nEach message is sent to the companion sub-workflow, which extracts the invoice with AI and books it in work4all. *Has errors?* then routes the result.",
+        "content": "## 2. Extract & book\nEach message is sent to the built-in sub-workflow, which extracts the invoice with AI and books it in work4all. *Has errors?* then routes the result.",
         "height": 384,
         "width": 520,
         "color": 7
@@ -374,9 +374,10 @@
     },
     {
       "parameters": {
-        "content": "## Create a work4all incoming invoice from email attachments using AI\n\nThis **sub-workflow** is called by a parent workflow with one email item whose attachments are passed as binary data. The attachments are read by AI, structured invoice data is extracted, and the **work4all** node books the incoming invoice with the original files attached.\n\n### How it works\n1. Keeps only emails that carry a readable PDF / XML / JSON attachment.\n2. Extracts invoice data in one of two modes (**Extraction config**):\n   - **`backend`** (default) — work4all AI backend, uses the **work4all** credential.\n   - **`llm`** — your own **OpenAI-compatible** model (*Call LLM*).\n3. Normalises the result, books the incoming invoice and attaches the files.\n\n### Setup\n1. Add your **work4all** credential.\n2. Call this workflow from a parent that supplies the email + attachments.\n\n### Customization\n- **Extraction mode** — default is `backend` (work4all AI). For your own model, set **Extraction config** to `llm` and add an **OpenAI-compatible** credential on *Call LLM*.\n- Switch provider/model in *Call LLM* and the `MODEL` constant in *Build LLM messages* (must support **PDF / file input**).\n\nRequires a work4all account and the verified `n8n-nodes-work4all` node.",
+        "content": "## Sub-workflow: extract invoice data from email attachments using AI\nThe main flow calls this part via *Run invoice extraction sub-workflow*. It receives one email with its attachments, reads them with AI, and the **work4all** node books the incoming invoice with the original files attached.\n\n### How it works\n1. Keeps only emails that carry a readable PDF / XML / JSON attachment.\n2. Extracts invoice data in one of two modes (**Extraction config**):\n   - **`backend`** (default) — work4all AI backend, uses the **work4all** credential.\n   - **`llm`** — your own **OpenAI-compatible** model (*Call LLM*).\n3. Normalises the result, books the incoming invoice and attaches the files.\n\n### Customization\n- **Extraction mode** — default is `backend` (work4all AI). For your own model, set **Extraction config** to `llm` and add an **OpenAI-compatible** credential on *Call LLM*.\n- Switch provider/model in *Call LLM* and the `MODEL` constant in *Build LLM messages* (must support **PDF / file input**).",
         "height": 680,
-        "width": 460
+        "width": 460,
+        "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -799,7 +800,7 @@
     },
     {
       "parameters": {
-        "content": "# Invoice extraction sub-workflow",
+        "content": "# [Sub workflow] Extract invoice data with AI & book in work4all",
         "height": 1424,
         "width": 4142,
         "color": "#141414"
@@ -811,11 +812,11 @@
         -112
       ],
       "id": "ab6811e0-9be0-40d0-bcd9-3acf2b4261eb",
-      "name": "Sticky Note - Extraction mode1"
+      "name": "Sticky Note - Frame Sub workflow"
     },
     {
       "parameters": {
-        "content": "# Automatically create work4all invoices from Outlook inbox emails",
+        "content": "# [Main workflow] Poll Outlook inbox, route & categorise emails",
         "height": 1424,
         "width": 2494,
         "color": "#141414"
@@ -827,23 +828,7 @@
         -80
       ],
       "id": "b0943532-a501-4f0d-acdc-bdec2c26dcc3",
-      "name": "Sticky Note - Extraction mode2"
-    },
-    {
-      "parameters": {
-        "content": "## ⚠️ Self-reference required\nThis node calls **this same workflow**. After import, open it and pick **this workflow itself** in the *Workflow* field — n8n then enters at *When called by parent workflow*.",
-        "height": 200,
-        "width": 360,
-        "color": 3
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        1216,
-        208
-      ],
-      "id": "f1e2d3c4-b5a6-4700-9c00-0001self0ref",
-      "name": "Sticky Note - Self reference"
+      "name": "Sticky Note - Frame Main workflow"
     }
   ],
   "pinData": {},
