@@ -1,0 +1,1141 @@
+{
+  "name": "Automatically create work4all invoices from Outlook inbox emails",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Automatically create work4all invoices from Outlook inbox emails\n\nPolls an Outlook folder for new supplier emails and turns their invoice attachments into incoming invoices in **work4all**. AI extraction and booking are handled by the companion sub-workflow; this workflow handles scheduling, fetching, error notifications and Outlook categorisation. Built for teams using **work4all** and **Microsoft Outlook** that want to stop entering supplier invoices by hand.\n\n### How it works\n1. A schedule trigger fetches messages from a chosen Outlook folder that aren't yet categorised red or green.\n2. Each message is passed to the **invoice extraction sub-workflow**, which creates the work4all incoming invoice.\n3. The email is categorised by outcome: **green** = booked, **yellow + green** = booked but please review (supplier / account / tax key was set automatically), **red** = error (a notification email is sent).\n\n### Setup\n1. Import the companion template **\"Create a work4all incoming invoice from email attachments using AI\"**.\n2. In *Run invoice extraction sub-workflow*, select that imported workflow.\n3. Add your **Microsoft Outlook** credential.\n4. In *Set error recipients*, enter the error-notification recipient(s).\n5. In *Get inbox messages*, choose the folder to monitor.\n6. Make sure the **Red / Green / Yellow** categories exist in your mailbox.\n\n### Customization\n- Change the polling interval on *Poll inbox every minute*.\n- Adjust which Outlook categories are used.\n\nRequires a Microsoft Outlook account, the companion sub-workflow and the verified `n8n-nodes-work4all` node.",
+        "height": 760,
+        "width": 460
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "171de5d6-ae50-4edd-8e39-7726adab2e07",
+      "name": "Sticky Note - Description"
+    },
+    {
+      "parameters": {
+        "content": "## 1. Poll the mailbox\nEvery minute, fetch messages from the configured folder that are **not** categorised red or green yet. Choose the folder in *Get inbox messages*.",
+        "height": 376,
+        "width": 616,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        528,
+        432
+      ],
+      "id": "0cd2f61c-cf67-4223-a922-014117f6037a",
+      "name": "Sticky Note - Poll"
+    },
+    {
+      "parameters": {
+        "content": "## 3. Categorise the outcome\n**green** = booked · **yellow + green** = booked, please review · **red** = error. These three categories must exist in your mailbox.",
+        "height": 524,
+        "width": 512,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        288
+      ],
+      "id": "b8a2154d-dcf7-429e-b559-eabed86656fe",
+      "name": "Sticky Note - Categorise"
+    },
+    {
+      "parameters": {
+        "content": "## 2. Extract & book\nEach message is sent to the companion sub-workflow, which extracts the invoice with AI and books it in work4all. *Has errors?* then routes the result.",
+        "height": 384,
+        "width": 520,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        432
+      ],
+      "id": "5b707115-09cd-4218-89ba-1aac2c5585e9",
+      "name": "Sticky Note - Extract & book"
+    },
+    {
+      "parameters": {
+        "content": "## 4. Error handling\nIf the sub-workflow reports an error, send a notification to the configured recipient(s) and mark the email red.",
+        "height": 344,
+        "width": 760,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        912
+      ],
+      "id": "76e7127c-3055-4414-ad21-9246795f6c93",
+      "name": "Sticky Note - Error handling"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        576,
+        624
+      ],
+      "id": "83b7fb82-4f4f-4f9b-ab1c-8b6c9b59e4a8",
+      "name": "Poll inbox every minute"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-recipients",
+              "name": "errorRecipients",
+              "value": "you@example.com",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        784,
+        624
+      ],
+      "id": "2d17e56f-e8af-4422-a443-d24e781e673e",
+      "name": "Set error recipients"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "output": "raw",
+        "filtersUI": {
+          "values": {
+            "filters": {
+              "custom": "not(categories/any(c:c eq 'Red category')) and not(categories/any(c:c eq 'Green category'))",
+              "foldersToInclude": [
+                "REPLACE_WITH_YOUR_FOLDER_ID"
+              ]
+            }
+          }
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        624
+      ],
+      "id": "36adae40-8cab-416d-b0ba-fcc4a06f7930",
+      "name": "Get inbox messages",
+      "webhookId": "257e1506-34f5-41ec-9005-17fd8f150e91",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "YjkCtn2HLgYCvHjO",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/YjkCtn2HLgYCvHjO",
+          "cachedResultName": "Automatically create work4all invoices from Outlook inbox emails"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1264,
+        624
+      ],
+      "id": "ae9204b7-4e42-40ec-a943-14cc2f97e383",
+      "name": "Run invoice extraction sub-workflow",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d26a6695-69cd-4253-a407-9ced41587f40",
+              "leftValue": "={{ $json.errors }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1584,
+        608
+      ],
+      "id": "a5442323-6376-481f-a4f5-cadb57d07d5b",
+      "name": "Has errors?"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return { json: { error: $json.error } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        1104
+      ],
+      "id": "4708d15c-e761-4e23-8be2-53337c710675",
+      "name": "Extract error"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d20cbe3b-92aa-4cdf-85ba-1158a2c9f54f",
+              "leftValue": "={{ $json.invoiceData.ahf_CreateCompleteIncomingInvoice.newSupplierCreated }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "7e81baf3-a1d1-4709-af2a-afbd5f87dd0c",
+              "leftValue": "={{ $json.invoiceData.ahf_CreateCompleteIncomingInvoice.accountSet }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "9217a33b-c484-4449-84dc-a4223258a114",
+              "leftValue": "={{ $json.invoiceData.ahf_CreateCompleteIncomingInvoice.taxKeytSet }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1872,
+        560
+      ],
+      "id": "41ddc203-67bc-4ffb-b429-b625a9e1b4ad",
+      "name": "Supplier/account/tax key set?"
+    },
+    {
+      "parameters": {
+        "toRecipients": "={{ $('Set error recipients').first().json.errorRecipients }}",
+        "subject": "=Invoice workflow \"{{ $workflow.name }}\" reported an error",
+        "bodyContent": "={{ JSON.stringify($json.error ?? $json.errors ?? {}) }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1888,
+        1104
+      ],
+      "id": "5795c9d9-c98a-4a69-9ab1-d30b7cd3c8a6",
+      "name": "Send error email",
+      "webhookId": "4db9bbf8-40d6-451e-8c32-5d663a2efbbb"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "messageId": {
+          "__rl": true,
+          "value": "={{ $('Get inbox messages').item.json.id }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "categories": [
+            "Red category"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        1104
+      ],
+      "id": "5178307a-7c8b-4742-a299-5f18158de3df",
+      "name": "Mark message red",
+      "webhookId": "606b3d2d-a23a-430a-9cae-1bbf1ee04314"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "messageId": {
+          "__rl": true,
+          "value": "={{ $('Get inbox messages').item.json.id }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "categories": [
+            "Yellow category",
+            "Green category"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        448
+      ],
+      "id": "816671de-ad95-4d43-9b1a-85aed7fc271c",
+      "name": "Mark message yellow + green",
+      "webhookId": "469c4b49-67b6-4ffc-a45d-6b5182dd5b8a"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "messageId": {
+          "__rl": true,
+          "value": "={{ $('Get inbox messages').item.json.id }}",
+          "mode": "id"
+        },
+        "updateFields": {
+          "categories": [
+            "Green category"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        2112,
+        656
+      ],
+      "id": "92a4ab49-4759-483d-84f4-1fa6320f65cb",
+      "name": "Mark message green",
+      "webhookId": "3bbe9c2f-3380-4a94-a0ea-05621687497d"
+    },
+    {
+      "parameters": {
+        "content": "## Create a work4all incoming invoice from email attachments using AI\n\nThis **sub-workflow** is called by a parent workflow with one email item whose attachments are passed as binary data. The attachments are read by AI, structured invoice data is extracted, and the **work4all** node books the incoming invoice with the original files attached.\n\n### How it works\n1. Keeps only emails that carry a readable PDF / XML / JSON attachment.\n2. Extracts invoice data in one of two modes (**Extraction config**):\n   - **`backend`** (default) — work4all AI backend, uses the **work4all** credential.\n   - **`llm`** — your own **OpenAI-compatible** model (*Call LLM*).\n3. Normalises the result, books the incoming invoice and attaches the files.\n\n### Setup\n1. Add your **work4all** credential.\n2. Call this workflow from a parent that supplies the email + attachments.\n\n### Customization\n- **Extraction mode** — default is `backend` (work4all AI). For your own model, set **Extraction config** to `llm` and add an **OpenAI-compatible** credential on *Call LLM*.\n- Switch provider/model in *Call LLM* and the `MODEL` constant in *Build LLM messages* (must support **PDF / file input**).\n\nRequires a work4all account and the verified `n8n-nodes-work4all` node.",
+        "height": 680,
+        "width": 460
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3216,
+        64
+      ],
+      "id": "5bec4487-c3af-4641-97ec-49eca4de74d7",
+      "name": "Sticky Note - Sub-workflow Description"
+    },
+    {
+      "parameters": {
+        "content": "## 1 · Input & validation\nReceives the email from the parent workflow and keeps only items that carry a readable PDF / XML / JSON attachment.",
+        "height": 448,
+        "width": 704,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3760,
+        592
+      ],
+      "id": "053d3dd8-c88c-40bd-8d13-ba86e597306f",
+      "name": "Sticky Note - Input"
+    },
+    {
+      "parameters": {
+        "content": "## 3 · Extract invoice data\nBoth modes read the attachments and return the same structured invoice JSON — via the work4all AI backend or an OpenAI-compatible LLM (*Build LLM messages* → *Call LLM*).",
+        "height": 540,
+        "width": 470,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5152,
+        320
+      ],
+      "id": "5744084b-06e4-4e15-bfd2-2c6ae9fe8d7d",
+      "name": "Sticky Note - Extract"
+    },
+    {
+      "parameters": {
+        "content": "## 5 · Book in work4all\nNormalises currency and dates, creates the incoming invoice in work4all and attaches the original files.",
+        "height": 472,
+        "width": 736,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6368,
+        320
+      ],
+      "id": "3d40e4b1-264f-486f-8344-c7e39f278b99",
+      "name": "Sticky Note - Book"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        3808,
+        864
+      ],
+      "id": "800b38a7-21a6-4b15-90a6-2911ab488a22",
+      "name": "When called by parent workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7ea39fb4-a88f-4f20-85d2-6daea27f1c16",
+              "leftValue": "={{ Object.keys($binary ?? {}).length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4032,
+        864
+      ],
+      "id": "60401e23-4436-4752-9653-0a63b13bc3e7",
+      "name": "Has attachments?"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ⚙️ CONFIG: set your OpenAI-compatible model here\nconst MODEL = \"policy/EU-Sonnet-4-6\";\n\nconst item = $input.item;\n\nlet content = [\n  {\n    type: \"text\",\n    text: `\nReturn ONLY valid JSON.\nDo not use markdown.\nDo not wrap in triple backticks.\nDo not add explanations before or after the JSON.\n\nUse exactly this shape:\n{\n  \"found_invoice\": true,\n  \"reason\": \"short explanation\",\n  \"relevantAttachmentKeys\": [\"attachment_0\"],\n  \"invoiceData\": {\n    \"supplierCode\": null,\n    \"supplierName\": null,\n    \"supplierCustomerNumberAtSupplier\": null,\n    \"supplierContactMailAddress\": null,\n    \"supplierIban\": null,\n    \"projectCode\": null,\n    \"projectNumber\": null,\n    \"projectName\": null,\n    \"invoiceNumberSupplier\": null,\n    \"note\": null,\n    \"invoiceDate\": null,\n    \"paymentTermDays\": null,\n    \"discount1Rate\": null,\n    \"discount1Days\": null,\n    \"discount2Rate\": null,\n    \"discount2Days\": null,\n    \"currencyCode\": null,\n    \"invoiceItems\": [\n      {\n        \"account\": null,\n        \"costCenter\": null,\n        \"costGroup\": null,\n        \"projectCode\": null,\n        \"taxRate\": null,\n        \"netAmount\": null,\n        \"grossAmount\": null,\n        \"vatAmount\": null,\n        \"note\": null\n      }\n    ]\n  }\n}\n\nRules:\n- found_invoice = true only if at least one attachment is clearly an incoming supplier invoice / Eingangsrechnung / XRechnung / receipt relevant for accounting.\n- relevantAttachmentKeys must contain the original attachment keys like \"attachment_0\".\n- invoiceData field names must match exactly.\n- The note field should hold a short description, e.g. the supplier company name combined with the invoice period.\n- Each invoiceItems note should be a short note, not more than 50 characters.\n- Dates must be ISO-8601 strings if known, otherwise null.\n- Do not invent values.\n- Aggregate invoiceItems by VAT rate (Mehrwertsteuersatz), not by raw line item.\n- Return one invoiceItems entry per VAT bucket.\n- Sum netAmount, vatAmount and grossAmount per VAT bucket.\n- Only fill account, costCenter, costGroup, projectCode, taxCode if explicitly present in the documents.\n- If no invoice is found, return:\n  {\n    \"found_invoice\": false,\n    \"reason\": \"...\",\n    \"relevantAttachmentKeys\": [],\n    \"invoiceData\": {\n      \"supplierCode\": null,\n      \"supplierName\": null,\n      \"supplierCustomerNumberAtSupplier\": null,\n      \"supplierContactMailAddress\": null,\n      \"supplierIban\": null,\n      \"projectCode\": null,\n      \"projectNumber\": null,\n      \"projectName\": null,\n      \"invoiceNumberSupplier\": null,\n      \"note\": null,\n      \"invoiceDate\": null,\n      \"paymentTermDays\": null,\n      \"discount1Rate\": null,\n      \"discount1Days\": null,\n      \"discount2Rate\": null,\n      \"discount2Days\": null,\n      \"currencyCode\": null,\n      \"invoiceItems\": []\n    }\n  }\n`\n  }\n];\n\nlet has_xml_or_json = false;\n\nif (item.binary) {\n  for (const key of Object.keys(item.binary)) {\n    const file = item.binary[key];\n\n    const mimeType = file.mimeType || \"\";\n    const fileName = file.fileName || \"file\";\n\n    const buffer = await this.helpers.getBinaryDataBuffer(0, key);\n    const base64 = buffer.toString(\"base64\");\n\n    const isPdf =\n      mimeType.includes(\"pdf\") ||\n      fileName.toLowerCase().endsWith(\".pdf\");\n\n    if (isPdf) {\n      has_xml_or_json = true;\n      content.push({\n        type: \"input_file\",\n        filename: fileName,\n        file_data: `data:application/pdf;base64,${base64}`\n      });\n    } else if (\n      mimeType.includes(\"xml\") ||\n      mimeType.includes(\"json\") ||\n      fileName.endsWith(\".xml\") ||\n      fileName.endsWith(\".json\")\n    ) {\n      has_xml_or_json = true;\n      const text = buffer.toString(\"utf-8\");\n\n      content.push({\n        type: \"text\",\n        text: `Content of ${fileName}:\\n${text}`\n      });\n    }\n  }\n}\n\nreturn {\n  json: {\n    has_xml_or_json: has_xml_or_json,\n    model: MODEL,\n    messages: [\n      {\n        role: \"user\",\n        content\n      }\n    ]\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5200,
+        688
+      ],
+      "id": "31c491c8-d82b-4116-a673-0703889ab124",
+      "name": "Build LLM messages"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a5d662cb-f633-4648-bc88-bcc9362b9630",
+              "leftValue": "={{ Object.values($binary ?? {}).some(f => /pdf|xml|json/i.test(((f.mimeType || '') + ' ' + (f.fileName || '')))) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4272,
+        768
+      ],
+      "id": "ba8e471c-8029-4d1c-9053-4c588dfaf234",
+      "name": "Has readable attachment?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://router.eu.requesty.ai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5424,
+        688
+      ],
+      "id": "6c741ed5-bc8d-4881-a04e-45139ff26d97",
+      "name": "Call LLM"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "function removeNullish(value) {\n  if (Array.isArray(value)) {\n    return value.map(removeNullish);\n  }\n  if (value && typeof value === \"object\") {\n    return Object.fromEntries(\n      Object.entries(value)\n        .filter(([, v]) => v !== undefined && v !== null && v !== \"\")\n        .map(([k, v]) => [k, removeNullish(v)])\n    );\n  }\n  return value;\n}\n\n// LLM path returns an OpenAI envelope ($json.choices[0].message.content);\n// the work4all AI backend returns the payload directly (often as a plain JSON string).\nlet raw = $json && $json.choices ? $json.choices[0].message.content : $json;\n\nlet parsed;\nif (typeof raw === \"string\") {\n  raw = raw\n    .replace(/^```json\\s*/i, \"\")\n    .replace(/^```\\s*/i, \"\")\n    .replace(/\\s*```$/, \"\")\n    .trim();\n  parsed = raw ? JSON.parse(raw) : {};\n} else {\n  parsed = raw ?? {};\n}\n\nreturn {\n  json: {\n    found_invoice: parsed.found_invoice === true,\n    reason: parsed.reason ?? \"\",\n    relevantAttachmentKeys: parsed.relevantAttachmentKeys ?? [],\n    invoiceData: removeNullish(parsed.invoiceData ?? {}),\n  },\n  binary: $input.item.binary,\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5824,
+        592
+      ],
+      "id": "2dfadd43-7b04-4d1d-b794-7871ee51bbf0",
+      "name": "Parse extraction result"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6573bc49-61be-476e-95d7-3f9b4e26b1c9",
+              "leftValue": "={{ $json.found_invoice }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        6048,
+        592
+      ],
+      "id": "f57966fa-9f5b-4a44-a99d-7688b7110496",
+      "name": "Has invoice?"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const relevantKeys = $json.relevantAttachmentKeys || [];\nconst sourceBinary = $('When called by parent workflow').item.binary || {};\n\nconst keptBinary = Object.fromEntries(\n  relevantKeys\n    .filter((key) => sourceBinary[key])\n    .map((key) => [key, sourceBinary[key]])\n);\n\nconst invoiceData = { ...($json.invoiceData || {}) };\ninvoiceData.currency = \"EUR\";\ndelete invoiceData.currencyCode;\n\nfor (const key of [\"invoiceDate\", \"entryDate\", \"receiptDate\"]) {\n  if (\n    typeof invoiceData[key] === \"string\" &&\n    /^\\d{4}-\\d{2}-\\d{2}$/.test(invoiceData[key])\n  ) {\n    invoiceData[key] = `${invoiceData[key]}T00:00:00Z`;\n  }\n}\n\nconst receiptDate = $('When called by parent workflow').item.json.receivedDateTime;\n\ninvoiceData.receiptDate = receiptDate;\ninvoiceData.entryDate = receiptDate;\n\nreturn {\n  json: {\n    ...$json,\n    invoiceData,\n    relevantAttachmentKeys: relevantKeys,\n  },\n  binary: keptBinary,\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6416,
+        576
+      ],
+      "id": "38f1e22e-16dd-4fe5-acde-74c2397209b4",
+      "name": "Filter attachments & normalize"
+    },
+    {
+      "parameters": {
+        "dataMode": "json",
+        "invoiceDataJson": "={{$json.invoiceData}}",
+        "attachmentsMode": "json",
+        "attachmentsJson": "={{ ($json.relevantAttachmentKeys || []).map(k => ({ binaryPropertyName: k })) }}"
+      },
+      "type": "n8n-nodes-work4all.work4all",
+      "typeVersion": 1,
+      "position": [
+        6640,
+        576
+      ],
+      "id": "5f4bdef7-116f-46c6-b387-597cbd5a0ec2",
+      "name": "Create incoming invoice"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    messageId: $('When called by parent workflow').item.json.id,\n    errors: $json.errors,\n    invoiceData: $json.data\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6864,
+        576
+      ],
+      "id": "e4ddb9a2-81ce-4c6b-941d-2ae7c1ef88e9",
+      "name": "Format work4all result"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        6656,
+        1088
+      ],
+      "id": "6a1b5693-83dc-4608-953f-ee0f9eb56de0",
+      "name": "No invoice - skip"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    messageId: $('When called by parent workflow').item.json.id,\n    success: true\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6896,
+        1088
+      ],
+      "id": "31cbc4dc-4cdf-4498-aa0d-c8fa2679d7fc",
+      "name": "Build result (no invoice)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1b2c3d4-0001-4000-8000-000000000001",
+              "name": "extractionMode",
+              "value": "backend",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "stripBinary": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4592,
+        592
+      ],
+      "id": "58a610b5-2455-4926-9122-84bb2a85635f",
+      "name": "Extraction config"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b1b2c3d4-0002-4000-8000-000000000002",
+              "leftValue": "={{ $json.extractionMode }}",
+              "rightValue": "backend",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4816,
+        592
+      ],
+      "id": "e53d64c8-a89e-42ba-a0d8-d9b96681723e",
+      "name": "Use work4all AI backend?"
+    },
+    {
+      "parameters": {
+        "operation": "extractInvoiceData"
+      },
+      "type": "n8n-nodes-work4all.work4all",
+      "typeVersion": 1,
+      "position": [
+        5424,
+        496
+      ],
+      "id": "fa9fdc89-d625-4613-8035-f74149e5ddf3",
+      "name": "Extract invoice data"
+    },
+    {
+      "parameters": {
+        "content": "## 2 · Choose extraction mode\nSet `extractionMode` in **Extraction config**: `backend` (work4all AI backend) or `llm` (your own OpenAI-compatible model).",
+        "height": 416,
+        "width": 446,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4560,
+        384
+      ],
+      "id": "801e0bce-815a-4005-85a5-7984c248dca6",
+      "name": "Sticky Note - Extraction mode"
+    },
+    {
+      "parameters": {
+        "content": "## 4 · Parse & check\nNormalises either output into the same shape and checks whether an invoice was found. If not, booking is skipped.",
+        "height": 500,
+        "width": 420,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5776,
+        320
+      ],
+      "id": "38a325fa-4b97-4f69-b053-294e07051c15",
+      "name": "Sticky Note - Parse"
+    },
+    {
+      "parameters": {
+        "content": "## 6 · No invoice\nItems without a usable invoice end here and return a simple skipped result.",
+        "height": 320,
+        "width": 488,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6608,
+        928
+      ],
+      "id": "de2b6500-7534-4f57-a7b4-72cac1ff5408",
+      "name": "Sticky Note - No invoice"
+    },
+    {
+      "parameters": {
+        "content": "# Invoice extraction sub-workflow",
+        "height": 1424,
+        "width": 4142,
+        "color": "#141414"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3072,
+        -112
+      ],
+      "id": "ab6811e0-9be0-40d0-bcd9-3acf2b4261eb",
+      "name": "Sticky Note - Extraction mode1"
+    },
+    {
+      "parameters": {
+        "content": "# Automatically create work4all invoices from Outlook inbox emails",
+        "height": 1424,
+        "width": 2494,
+        "color": "#141414"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -80
+      ],
+      "id": "b0943532-a501-4f0d-acdc-bdec2c26dcc3",
+      "name": "Sticky Note - Extraction mode2"
+    },
+    {
+      "parameters": {
+        "content": "## ⚠️ Self-reference required\nThis node calls **this same workflow**. After import, open it and pick **this workflow itself** in the *Workflow* field — n8n then enters at *When called by parent workflow*.",
+        "height": 200,
+        "width": 360,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        208
+      ],
+      "id": "f1e2d3c4-b5a6-4700-9c00-0001self0ref",
+      "name": "Sticky Note - Self reference"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Poll inbox every minute": {
+      "main": [
+        [
+          {
+            "node": "Set error recipients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set error recipients": {
+      "main": [
+        [
+          {
+            "node": "Get inbox messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get inbox messages": {
+      "main": [
+        [
+          {
+            "node": "Run invoice extraction sub-workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run invoice extraction sub-workflow": {
+      "main": [
+        [
+          {
+            "node": "Has errors?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has errors?": {
+      "main": [
+        [
+          {
+            "node": "Send error email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supplier/account/tax key set?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract error": {
+      "main": [
+        [
+          {
+            "node": "Send error email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send error email": {
+      "main": [
+        [
+          {
+            "node": "Mark message red",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supplier/account/tax key set?": {
+      "main": [
+        [
+          {
+            "node": "Mark message yellow + green",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark message green",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When called by parent workflow": {
+      "main": [
+        [
+          {
+            "node": "Has attachments?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has attachments?": {
+      "main": [
+        [
+          {
+            "node": "Has readable attachment?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No invoice - skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has readable attachment?": {
+      "main": [
+        [
+          {
+            "node": "Extraction config",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No invoice - skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraction config": {
+      "main": [
+        [
+          {
+            "node": "Use work4all AI backend?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use work4all AI backend?": {
+      "main": [
+        [
+          {
+            "node": "Extract invoice data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build LLM messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract invoice data": {
+      "main": [
+        [
+          {
+            "node": "Parse extraction result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build LLM messages": {
+      "main": [
+        [
+          {
+            "node": "Call LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call LLM": {
+      "main": [
+        [
+          {
+            "node": "Parse extraction result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse extraction result": {
+      "main": [
+        [
+          {
+            "node": "Has invoice?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has invoice?": {
+      "main": [
+        [
+          {
+            "node": "Filter attachments & normalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No invoice - skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter attachments & normalize": {
+      "main": [
+        [
+          {
+            "node": "Create incoming invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create incoming invoice": {
+      "main": [
+        [
+          {
+            "node": "Format work4all result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No invoice - skip": {
+      "main": [
+        [
+          {
+            "node": "Build result (no invoice)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "998cdc4d-a42d-4826-bd39-a5a9115dd320",
+  "meta": {},
+  "id": "YjkCtn2HLgYCvHjO",
+  "tags": []
+}
