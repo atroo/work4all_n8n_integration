@@ -829,6 +829,22 @@
       ],
       "id": "b0943532-a501-4f0d-acdc-bdec2c26dcc3",
       "name": "Sticky Note - Frame Main workflow"
+    },
+    {
+      "parameters": {
+        "content": "## ⚠️ First-time setup\nPoint *Run invoice extraction sub-workflow* to **this workflow** — it then jumps into the sub-workflow on the right.",
+        "height": 150,
+        "width": 360,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        208
+      ],
+      "id": "f1e2d3c4-b5a6-4700-9c00-0002selfref01",
+      "name": "Sticky Note - Self reference"
     }
   ],
   "pinData": {},
